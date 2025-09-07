@@ -1,5 +1,6 @@
-// Ward 22A Hospital Management System - Complete Version with Cloud Integration
+// Ward 22A Hospital Management System - Final Version
 // Safdarjung Hospital Burns & Plastic Surgery Department
+// Built for VMMC & Safdarjung Hospital, New Delhi
 
 let hms = null;
 let cloudBackup = null;
@@ -41,9 +42,9 @@ function attemptLogin() {
     const password = document.getElementById('password').value;
     const errorDiv = document.getElementById('loginError');
     
-    // Default credentials
+    // Final credentials
     const defaultUser = 'ward22a';
-    const defaultPass = 'zxcvbnm1234';
+    const defaultPass = 'zxcv123';
     
     if (username === defaultUser && password === defaultPass) {
         document.getElementById('loginScreen').classList.add('hidden');
@@ -192,12 +193,12 @@ function updateCredentials() {
 // ===== CLOUD BACKUP FUNCTIONS =====
 
 function cloudSignIn() {
-    if (cloudBackup) {
+    if (cloudBackup && window.CloudBackup) {
         cloudBackup.signIn();
     } else {
         showToast('⚠️ Cloud backup not configured. Please run setup first.', 'warning');
         setTimeout(() => {
-            if (cloudSetup && typeof cloudSetup.startSetupWizard === 'function') {
+            if (window.cloudSetup && typeof cloudSetup.startSetupWizard === 'function') {
                 cloudSetup.startSetupWizard();
             }
         }, 1000);
@@ -205,7 +206,7 @@ function cloudSignIn() {
 }
 
 function cloudSignOut() {
-    if (cloudBackup) {
+    if (cloudBackup && window.CloudBackup) {
         cloudBackup.signOut();
     } else {
         showToast('Cloud backup not configured', 'info');
@@ -213,7 +214,7 @@ function cloudSignOut() {
 }
 
 async function performCloudBackup() {
-    if (!cloudBackup) {
+    if (!cloudBackup || !window.CloudBackup) {
         showToast('⚠️ Cloud backup not configured', 'warning');
         return;
     }
@@ -224,29 +225,58 @@ async function performCloudBackup() {
     }
     
     try {
-        const encryptionPassword = prompt('🔐 Enter encryption password for backup:');
+        // Get encryption password
+        const config = JSON.parse(localStorage.getItem('ward22a_cloud_config') || '{}');
+        let encryptionPassword = config.encryptionPassword;
+        
         if (!encryptionPassword) {
-            showToast('Backup cancelled', 'info');
-            return;
+            encryptionPassword = prompt('🔐 Enter encryption password for backup:');
+            if (!encryptionPassword) {
+                showToast('Backup cancelled', 'info');
+                return;
+            }
+        }
+        
+        // Show loading state
+        const backupBtn = document.getElementById('cloudBackupBtn');
+        const originalText = backupBtn?.textContent;
+        if (backupBtn) {
+            backupBtn.textContent = '⏳ Creating backup...';
+            backupBtn.disabled = true;
         }
         
         showToast('⏳ Creating encrypted backup...', 'info');
         
+        // Perform actual backup
         const result = await cloudBackup.uploadBackup(hms.hospitalData, encryptionPassword);
+        
+        // Reset button
+        if (backupBtn) {
+            backupBtn.textContent = originalText || '☁️ Backup Now';
+            backupBtn.disabled = false;
+        }
+        
         if (result.success) {
-            showToast('✅ Backup completed successfully!', 'success');
-            updateCloudBackupStatus('Last backup: ' + new Date().toLocaleString());
+            showToast(`✅ Backup completed! File: ${result.filename} (${result.size})`, 'success');
+            updateCloudBackupStatus(`Last backup: ${new Date().toLocaleString()}`);
         } else {
             showToast('❌ Backup failed: ' + result.error, 'error');
         }
     } catch (error) {
         showToast('❌ Backup error: ' + error.message, 'error');
         console.error('Cloud backup error:', error);
+        
+        // Reset button on error
+        const backupBtn = document.getElementById('cloudBackupBtn');
+        if (backupBtn) {
+            backupBtn.textContent = '☁️ Backup Now';
+            backupBtn.disabled = false;
+        }
     }
 }
 
 async function showRestoreOptions() {
-    if (!cloudBackup) {
+    if (!cloudBackup || !window.CloudBackup) {
         showToast('⚠️ Cloud backup not configured', 'warning');
         return;
     }
@@ -270,7 +300,7 @@ async function showRestoreOptions() {
             return;
         }
         
-        // Show backup selection modal
+        // Show backup selection modal with real data
         showBackupSelectionModal(backups.backups);
         
     } catch (error) {
@@ -282,26 +312,51 @@ function showBackupSelectionModal(backups) {
     const modal = document.createElement('div');
     modal.className = 'modal backup-selection-modal';
     modal.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content large">
             <div class="modal-header">
-                <h3>📥 Restore from Backup</h3>
+                <h3>📥 Restore from Cloud Backup</h3>
                 <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
             </div>
             <div class="modal-body">
                 <div class="backup-warning">
-                    ⚠️ <strong>Warning:</strong> Restoring will replace all current data. Make sure to backup current data first.
+                    ⚠️ <strong>Warning:</strong> Restoring will replace all current data. 
+                    <button class="btn btn--sm btn--secondary" onclick="performCloudBackup()">Backup Current Data First</button>
                 </div>
+                
+                <div class="backup-stats">
+                    <strong>Available Backups:</strong> ${backups.length} | 
+                    <strong>Latest:</strong> ${backups[0]?.created || 'N/A'}
+                </div>
+                
                 <div class="backup-list">
                     ${backups.map((backup, index) => `
-                        <div class="backup-item" onclick="selectBackup('${backup.id}', '${backup.name}')">
+                        <div class="backup-item ${index === 0 ? 'latest' : ''}" onclick="selectBackup('${backup.id}', '${backup.name}')">
                             <div class="backup-info">
-                                <strong>${backup.name}</strong><br>
-                                <small>Created: ${backup.created}</small><br>
-                                <small>Size: ${backup.size}</small>
+                                <div class="backup-name">
+                                    <strong>${backup.name}</strong>
+                                    ${index === 0 ? '<span class="badge success">Latest</span>' : ''}
+                                </div>
+                                <div class="backup-details">
+                                    📅 Created: ${backup.created}<br>
+                                    📊 Size: ${backup.size}<br>
+                                    📝 ${backup.description}
+                                </div>
                             </div>
-                            <button class="btn btn--primary btn--sm">Restore</button>
+                            <div class="backup-actions">
+                                <button class="btn btn--primary btn--sm">Restore</button>
+                                <button class="btn btn--danger btn--sm" onclick="event.stopPropagation(); deleteBackup('${backup.id}', '${backup.name}')">Delete</button>
+                            </div>
                         </div>
                     `).join('')}
+                </div>
+                
+                <div class="backup-tips">
+                    <h5>💡 Tips:</h5>
+                    <ul>
+                        <li>Always backup current data before restoring</li>
+                        <li>Use the latest backup unless you need older data</li>
+                        <li>You'll need the encryption password used when creating the backup</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -315,10 +370,16 @@ async function selectBackup(backupId, backupName) {
         return;
     }
     
-    const encryptionPassword = prompt('🔐 Enter encryption password for this backup:');
+    // Get encryption password
+    const config = JSON.parse(localStorage.getItem('ward22a_cloud_config') || '{}');
+    let encryptionPassword = config.encryptionPassword;
+    
     if (!encryptionPassword) {
-        showToast('Restore cancelled', 'info');
-        return;
+        encryptionPassword = prompt('🔐 Enter encryption password for this backup:');
+        if (!encryptionPassword) {
+            showToast('Restore cancelled', 'info');
+            return;
+        }
     }
     
     try {
@@ -326,25 +387,60 @@ async function selectBackup(backupId, backupName) {
         
         const result = await cloudBackup.downloadBackup(backupId, encryptionPassword);
         if (result.success) {
+            // Verify data structure
+            if (!result.data.hospitalData) {
+                throw new Error('Invalid backup format');
+            }
+            
             // Replace current data
             hms.hospitalData = result.data.hospitalData;
             hms.saveDataToStorage();
             
-            // Refresh UI
+            // Refresh UI completely
             hms.renderBeds();
             hms.updateDashboardStats();
             hms.renderRegisterContent(hms.currentRegister);
+            hms.updateSystemInfo();
             
             showToast('✅ Backup restored successfully!', 'success');
             
             // Close modal
             document.querySelector('.backup-selection-modal')?.remove();
             
+            // Show restore info
+            if (result.data.metadata) {
+                const meta = result.data.metadata;
+                console.log('📋 Restored backup metadata:', meta);
+                showToast(`Restored data from ${meta.exportDate ? new Date(meta.exportDate).toLocaleString() : 'unknown date'}`, 'info');
+            }
+            
         } else {
             showToast('❌ Restore failed: ' + result.error, 'error');
         }
     } catch (error) {
         showToast('❌ Restore error: ' + error.message, 'error');
+        console.error('Restore error:', error);
+    }
+}
+
+async function deleteBackup(backupId, backupName) {
+    if (!confirm(`🗑️ Permanently delete backup "${backupName}"?\n\nThis action cannot be undone!`)) {
+        return;
+    }
+    
+    try {
+        const result = await cloudBackup.deleteBackup(backupId);
+        if (result.success) {
+            showToast('🗑️ Backup deleted successfully', 'success');
+            
+            // Refresh backup list
+            document.querySelector('.backup-selection-modal')?.remove();
+            setTimeout(() => showRestoreOptions(), 500);
+        } else {
+            showToast('❌ Delete failed: ' + result.error, 'error');
+        }
+    } catch (error) {
+        showToast('❌ Delete error: ' + error.message, 'error');
     }
 }
 
@@ -370,8 +466,6 @@ function clearAllData() {
     }
 }
 
-// ===== CLOUD BACKUP STATUS UPDATES =====
-
 function updateCloudBackupStatus(message) {
     const statusEl = document.getElementById('syncStatus');
     if (statusEl) {
@@ -388,7 +482,7 @@ class HospitalManagementSystem {
         
         this.credentials = {
             admin_username: "ward22a",
-            admin_password: "zxcvbnm1234",
+            admin_password: "zxcv123",
             security_password: "Chetan@123"
         };
         
@@ -811,6 +905,9 @@ class HospitalManagementSystem {
             case 4:
                 this.renderDailyCensus();
                 break;
+            case 5:
+                this.renderDataManagement();
+                break;
             default:
                 break;
         }
@@ -910,6 +1007,11 @@ class HospitalManagementSystem {
     renderDailyCensus() {
         const today = new Date().toISOString().split('T')[0];
         this.setElementValue('censusDate', today);
+    }
+    
+    renderDataManagement() {
+        // Update system info when data management is rendered
+        this.updateSystemInfo();
     }
     
     generateCensusReport() {
@@ -1143,6 +1245,7 @@ class HospitalManagementSystem {
         const allData = {
             exportDate: new Date().toISOString(),
             ward: 'Ward 22A',
+            hospital: 'VMMC & Safdarjung Hospital',
             hospitalData: this.hospitalData
         };
         
@@ -1304,88 +1407,67 @@ async function initializeCloudFeatures() {
             hasEncryption: !!cloudConfig.encryptionPassword
         });
         
-        // Create placeholder cloud backup system (since we don't have the full implementation)
-        cloudBackup = {
-            apiKey: cloudConfig.apiKey,
-            clientId: cloudConfig.clientId,
-            isSignedIn: false,
+        // Initialize real cloud backup system
+        if (window.CloudBackup) {
+            cloudBackup = new CloudBackup();
             
-            async signIn() {
-                showToast('🔐 Cloud sign-in functionality ready (demo mode)', 'info');
-                this.isSignedIn = true;
-                updateCloudBackupStatus('✅ Signed in to Google Drive (demo)');
-            },
-            
-            async signOut() {
-                showToast('🚪 Signed out from cloud backup', 'info');
-                this.isSignedIn = false;
-                updateCloudBackupStatus('');
-            },
-            
-            async uploadBackup(data, password) {
-                // Simulate upload
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                return {
-                    success: true,
-                    fileId: 'demo_' + Date.now(),
-                    filename: 'Ward22A_Backup_' + new Date().toISOString().split('T')[0] + '.hms',
-                    uploadTime: new Date().toISOString()
-                };
-            },
-            
-            async downloadBackup(fileId, password) {
-                // Simulate download
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                return {
-                    success: true,
-                    data: { hospitalData: hms.hospitalData },
-                    downloadTime: new Date().toISOString()
-                };
-            },
-            
-            async listBackups() {
-                // Simulate backup list
-                return {
-                    success: true,
-                    backups: [
-                        {
-                            id: 'backup1',
-                            name: 'Ward22A_Backup_2025-09-07_14-30.hms',
-                            created: new Date().toLocaleString(),
-                            size: '2.4 KB'
-                        },
-                        {
-                            id: 'backup2', 
-                            name: 'Ward22A_Backup_2025-09-06_18-15.hms',
-                            created: new Date(Date.now() - 86400000).toLocaleString(),
-                            size: '2.2 KB'
-                        }
-                    ]
-                };
+            // Initialize Google Drive API
+            try {
+                await cloudBackup.initializeGoogleDrive();
+                console.log('✅ Google Drive API ready');
+            } catch (error) {
+                console.error('❌ Google Drive initialization failed:', error);
+                showToast('⚠️ Cloud backup initialization failed: ' + error.message, 'warning');
             }
-        };
-        
-        // Update UI to show cloud features are available
-        const signInBtn = document.getElementById('googleSignInBtn');
-        if (signInBtn) {
-            signInBtn.disabled = false;
-            signInBtn.style.opacity = '1';
+        } else {
+            console.warn('⚠️ CloudBackup class not available. Make sure cloudBackup.js is loaded.');
         }
         
-        // Add configured indicator
-        const cloudSection = document.querySelector('.cloud-backup-section');
-        if (cloudSection) {
-            const indicator = document.createElement('div');
-            indicator.className = 'cloud-configured-indicator';
-            indicator.innerHTML = '✅ Cloud backup configured and ready (demo mode)';
-            indicator.style.cssText = 'background: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 600; text-align: center;';
-            cloudSection.insertBefore(indicator, cloudSection.firstChild);
+        // Initialize encryption system
+        if (window.DataEncryption) {
+            const encryption = new DataEncryption();
+            const testResult = await encryption.testEncryption();
+            console.log('🔐 Encryption test:', testResult ? 'PASSED' : 'FAILED');
+        } else {
+            console.warn('⚠️ DataEncryption class not available. Make sure encryption.js is loaded.');
+        }
+        
+        // Update UI to show cloud features are available
+        updateCloudUI();
+        
+        // Setup automatic backup if enabled
+        if (cloudBackup && cloudConfig.dailyBackup) {
+            cloudBackup.setupAutoBackup(24); // Every 24 hours
+            console.log('⏰ Automatic backup enabled');
         }
         
         console.log('✅ Cloud features initialized successfully');
         
     } catch (error) {
         console.error('❌ Cloud initialization failed:', error);
+        showToast('❌ Cloud backup initialization failed', 'error');
+    }
+}
+
+function updateCloudUI() {
+    // Enable cloud backup buttons
+    const signInBtn = document.getElementById('googleSignInBtn');
+    const backupBtn = document.getElementById('cloudBackupBtn');
+    const restoreBtn = document.getElementById('cloudRestoreBtn');
+    
+    if (signInBtn) {
+        signInBtn.disabled = false;
+        signInBtn.style.opacity = '1';
+    }
+    
+    // Add configured indicator
+    const cloudSection = document.querySelector('.cloud-backup-section');
+    if (cloudSection && !cloudSection.querySelector('.cloud-configured-indicator')) {
+        const indicator = document.createElement('div');
+        indicator.className = 'cloud-configured-indicator';
+        indicator.innerHTML = '✅ Cloud backup configured and ready';
+        indicator.style.cssText = 'background: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 600; text-align: center;';
+        cloudSection.insertBefore(indicator, cloudSection.firstChild);
     }
 }
 
@@ -1434,7 +1516,9 @@ function initializeHMS() {
         hms.updateSystemInfo();
         
         // Initialize cloud features
-        initializeCloudFeatures();
+        setTimeout(() => {
+            initializeCloudFeatures();
+        }, 1000);
     }
 }
 
@@ -1454,14 +1538,235 @@ function showToast(message, type = 'info') {
                 toast.parentNode.removeChild(toast);
             }
         }, 3000);
+    } else {
+        // Fallback to alert if no toast container
+        if (type === 'error') {
+            alert('❌ ' + message);
+        }
     }
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🏥 Ward 22A HMS Loading...');
+// Add CSS for backup modal and improved styling
+document.addEventListener('DOMContentLoaded', () => {
+    const additionalCSS = `
+        <style>
+        /* Backup Modal Styles */
+        .backup-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+
+        .backup-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .backup-item:hover {
+            background: #f8f9fa;
+            border-color: #007bff;
+        }
+
+        .backup-item.latest {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+
+        .backup-info {
+            flex: 1;
+        }
+
+        .backup-name {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .backup-details {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .backup-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .backup-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            border: 1px solid #ffeaa7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .backup-stats {
+            background: #f8f9fa;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .backup-tips {
+            background: #e7f3ff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .backup-tips ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .backup-tips li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Patient Card Styles */
+        .patient-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .patient-details p {
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+        
+        /* Census Report Styles */
+        .census-report {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .census-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .census-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .census-item label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .census-item span {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        /* Improved Toast Styles */
+        .toast {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            animation: slideInRight 0.3s ease;
+        }
+        
+        .toast.success {
+            background: #28a745;
+        }
+        
+        .toast.error {
+            background: #dc3545;
+        }
+        
+        .toast.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .toast.info {
+            background: #17a2b8;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .backup-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+            
+            .backup-actions {
+                justify-content: center;
+            }
+            
+            .census-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .patient-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+        </style>
+    `;
+    
+    document.head.insertAdjacentHTML('beforeend', additionalCSS);
+    
+    console.log('🏥 Ward 22A HMS - Final Version Loading...');
     console.log('📅 Current Date:', new Date().toLocaleString());
+    console.log('🔐 Login: ward22a / zxcv123');
+    console.log('🔒 Security Password: Chetan@123');
     
     // HMS will be initialized when mode is selected
-    // Cloud setup will auto-prompt if needed
 });
