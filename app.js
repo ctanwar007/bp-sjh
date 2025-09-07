@@ -40,7 +40,7 @@ function attemptLogin() {
     
     // Default credentials
     const defaultUser = 'ward22a';
-    const defaultPass = 'zxcvbnm1234';
+    const defaultPass = 'zxcv123';
     
     if (username === defaultUser && password === defaultPass) {
         document.getElementById('loginScreen').classList.add('hidden');
