@@ -3,7 +3,7 @@ class CloudBackup {
     constructor() {
         this.encryption = new DataEncryption();
         this.apiKey = 'YOUR_GOOGLE_API_KEY'; // Get from Google Cloud Console
-        this.clientId = 'YOUR_CLIENT_ID.googleusercontent.com';
+        this.clientId = '786164300452-51e4gn1sdl6gdn5v3ricbf4p5iakhd7l.apps.googleusercontent.com';
         this.discoveryDoc = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
         this.scopes = 'https://www.googleapis.com/auth/drive.file';
         this.isInitialized = false;
