@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ward 22A - Safdarjung Hospital Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google APIs -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="encryption.js"></script>
+<script src="cloudBackup.js"></script>
+<script src="syncManager.js"></script>
+<script src="versionControl.js"></script>
+<script src="cloudSetup.js"></script>
+</head>
+<body>
+    <!-- Mode Selection Screen -->
+    <div id="modeSelection" class="mode-selection">
+        <div class="mode-container">
+            <div class="hospital-header">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23007bff'/%3E%3Ctext x='50' y='58' text-anchor='middle' fill='white' font-size='60' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" alt="Hospital Logo" class="hospital-logo">
+                <h1>VMMC & Safdarjung Hospital</h1>
+                <h2>Burns and Plastic Surgery Department</h2>
+                <h3>Ward 22A Management System</h3>
+                <p class="hospital-info">Ring Road, New Delhi - 110029</p>
+            </div>
+            
+            <div class="mode-options">
+                <div class="mode-card" onclick="selectMode('view')">
+                    <div class="mode-icon">👁️</div>
+                    <h4>View Only Mode</h4>
+                    <p>Read-only access to all registers and patient data</p>
+                    <ul class="feature-list">
+                        <li>View patient records</li>
+                        <li>Check bed occupancy</li>
+                        <li>Access all registers</li>
+                        <li>Generate reports</li>
+                    </ul>
+                    <button class="btn btn--secondary">Enter View Mode</button>
+                </div>
+                
+                <div class="mode-card" onclick="selectMode('admin')">
+                    <div class="mode-icon">🔐</div>
+                    <h4>Admin Mode</h4>
+                    <p>Full access with edit and management capabilities</p>
+                    <ul class="feature-list">
+                        <li>Add/Edit patient records</li>
+                        <li>Manage staff duties</li>
+                        <li>Transfer/Discharge patients</li>
+                        <li>Full register control</li>
+                    </ul>
+                    <button class="btn btn--primary">Enter Admin Mode</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen hidden">
+        <div class="login-container">
+            <div class="login-header">
+                <h3>🏥 Admin Login - Ward 22A</h3>
+                <p>Enter your credentials to access administrative features</p>
+            </div>
+            
+            <form id="loginForm" class="login-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="username" class="form-control" required autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-control" required autocomplete="current-password">
+                </div>
+                
+                <div id="loginError" class="error-message hidden"></div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn--secondary" onclick="backToModeSelection()">Back</button>
+                    <button type="submit" class="btn btn--primary" onclick="attemptLogin()">Login</button>
+                </div>
+                
+                <div class="login-help">
+                    <small>Default credentials: ward22a / zxcvbnm1234</small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="main-app hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="hospital-info">
+                    <h1>Ward 22A Dashboard</h1>
+                    <p>Burns & Plastic Surgery Department</p>
+                    <span class="date-time" id="currentDateTime"></span>
+                </div>
+                <div class="header-actions">
+                    <span id="currentMode" class="mode-badge">View Mode</span>
+                    <button class="btn btn--outline btn--sm" onclick="changeLoginCredentials()" id="changeCredsBtn">
+                        ⚙️ Change Login
+                    </button>
+                    <button class="btn btn--primary btn--sm" onclick="saveData()">
+                        💾 Save Data
+                    </button>
+                    <button class="btn btn--secondary btn--sm" onclick="logout()">
+                        🚪 Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="main-nav">
+            <div class="nav-container">
+                <button class="nav-btn active" onclick="showRegister(0)" data-register="0">
+                    📊 Dashboard
+                </button>
+                <button class="nav-btn" onclick="showRegister(1)" data-register="1">
+                    📝 Admission
+                </button>
+                <button class="nav-btn" onclick="showRegister(2)" data-register="2">
+                    🏠 Discharge
+                </button>
+                <button class="nav-btn" onclick="showRegister(3)" data-register="3">
+                    🏥 Treatment
+                </button>
+                <button class="nav-btn" onclick="showRegister(4)" data-register="4">
+                    📋 Daily Census
+                </button>
+                <button class="nav-btn" onclick="showRegister(5)" data-register="5">
+                    🔄 Transfer Out
+                </button>
+                <button class="nav-btn" onclick="showRegister(6)" data-register="6">
+                    👥 Staff Duty
+                </button>
+                <button class="nav-btn" onclick="showRegister(7)" data-register="7">
+                    📦 Inventory
+                </button>
+                <button class="nav-btn" onclick="showRegister(8)" data-register="8">
+                    🩹 Dressing
+                </button>
+                <button class="nav-btn" onclick="showRegister(9)" data-register="9" id="dataManagementTab">
+                    💽 Data Management
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard (Register 0) -->
+            <div id="register-0" class="register-content active">
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <h3 id="totalPatients">0</h3>
+                        <p>Total Patients</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="availableBeds">32</h3>
+                        <p>Available Beds</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="onLeavePatients">0</h3>
+                        <p>On Leave</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="mlcCases">0</h3>
+                        <p>MLC Cases</p>
+                    </div>
+                </div>
+
+                <!-- Dashboard Actions -->
+                <div class="dashboard-actions">
+                    <button class="btn btn--info btn--sm" onclick="showPatientListModal()">
+                        📋 View Patient List
+                    </button>
+                    <button class="btn btn--primary btn--sm" onclick="showAdmissionForm()" id="addPatientBtn">
+                        ➕ Add New Patient
+                    </button>
+                    <button class="btn btn--secondary btn--sm" onclick="exportData()">
+                        📥 Export Data
+                    </button>
+                </div>
+
+                <!-- 32 Beds Container -->
+                <div class="beds-section">
+                    <h2>Ward 22A - Bed Layout (32 Beds)</h2>
+                    <div class="bed-legend">
+                        <div class="legend-item"><div class="legend-color vacant"></div> Vacant</div>
+                        <div class="legend-item"><div class="legend-color occupied"></div> Occupied</div>
+                        <div class="legend-item"><div class="legend-color onleave"></div> On Leave</div>
+                        <div class="legend-item"><div class="legend-color critical"></div> Critical</div>
+                    </div>
+                    <div class="beds-container" id="bedsContainer">
+                        <!-- Beds will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admission Register -->
+            <div id="register-1" class="register-content">
+                <h2>📝 Admission</h2>
+                <div class="register-actions">
+                    <button class="btn btn--primary" onclick="showAdmissionForm()" id="addAdmissionBtn">+ Add New Admission</button>
+                    <button class="btn btn--secondary" onclick="exportRegister(1)">📄 Export CSV</button>
+                </div>
+                <div class="table-container">
+                    <table id="admissionTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Father's Name</th>
+                                <th>Age</th>
+                                <th>Sex</th>
+                                <th>MRD</th>
+                                <th>UHID</th>
+                                <th>Unit</th>
+                                <th>Bed No</th>
+                                <th>Address</th>
+                                <th>Diagnosis</th>
+                                <th>MLC Status</th>
+                                <th>Admission Date/Time</th>
+                                <th>Transfer From</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admissionTableBody">
+                            <!-- Data populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Discharge Register -->
+            <div id="register-2" class="register-content">
+                <h2>🏠 Discharge</h2>
+                <div class="table-container">
+                    <table id="dischargeTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Age</th>
+                                <th>Sex</th>
+                                <th>Bed No</th>
+                                <th>MRD</th>
+                                <th>Unit</th>
+                                <th>Diagnosis</th>
+                                <th>MLC Status</th>
+                                <th>Admission Date/Time</th>
+                                <th>Discharge Date/Time</th>
+                                <th>Discharge Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dischargeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Treatment Register -->
+            <div id="register-3" class="register-content">
+                <h2>🏥 Treatment (Main Ward Register)</h2>
+                <div class="treatment-overview">
+                    <div class="current-patients" id="currentPatientsList">
+                        <!-- Current patients with tabs will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Census -->
+            <div id="register-4" class="register-content">
+                <h2>📋 Daily Census Report</h2>
+                <div class="census-controls">
+                    <input type="date" id="censusDate" class="form-control">
+                    <button class="btn btn--primary" onclick="generateCensusReport()">Generate Report</button>
+                </div>
+                <div class="census-data" id="censusData"></div>
+            </div>
+
+            <!-- Transfer Out Register -->
+            <div id="register-5" class="register-content">
+                <h2>🔄 Transfer Out</h2>
+                <div class="table-container">
+                    <table id="transferTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>MRD</th>
+                                <th>UHID</th>
+                                <th>MLC Status</th>
+                                <th>Transfer Destination</th>
+                                <th>Transfer Date/Time</th>
+                                <th>Reason</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transferTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Staff Duty Register -->
+            <div id="register-6" class="register-content">
+                <h2>👥 Staff Duty</h2>
+                <div class="staff-tabs">
+                    <button class="tab-btn active" onclick="showStaffTab('current')">Current Day</button>
+                    <button class="tab-btn" onclick="showStaffTab('history')">Duty History</button>
+                </div>
+                
+                <div id="staffCurrent" class="staff-content active">
+                    <div class="staff-duty-today" id="staffDutyToday"></div>
+                </div>
+                
+                <div id="staffHistory" class="staff-content">
+                    <div class="history-controls">
+                        <label>Select Date:</label>
+                        <input type="date" id="historyDate" class="form-control" onchange="loadStaffHistory()">
+                        <div class="quick-date-buttons">
+                            <button class="btn btn--sm" onclick="selectQuickDate('yesterday')">Yesterday</button>
+                            <button class="btn btn--sm" onclick="selectQuickDate('lastweek')">Last Week</button>
+                            <button class="btn btn--sm" onclick="selectQuickDate('lastmonth')">Last Month</button>
+                        </div>
+                    </div>
+                    <div class="staff-history-data" id="staffHistoryData"></div>
+                </div>
+            </div>
+
+            <!-- Inventory Register -->
+            <div id="register-7" class="register-content">
+                <h2>📦 Inventory</h2>
+                <div class="inventory-content">
+                    <div class="inventory-placeholder">
+                        <h4>Inventory Management</h4>
+                        <div class="sample-inventory">
+                            <div class="inventory-item">
+                                <span>Surgical Gloves - Box of 100</span>
+                                <span>Stock: 25</span>
+                                <button class="delete-btn" onclick="deleteEntry('inventory', 'inv001')" title="Permanent Delete">×</button>
+                            </div>
+                            <div class="inventory-item">
+                                <span>Wound Dressing Kit</span>
+                                <span>Stock: 15</span>
+                                <button class="delete-btn" onclick="deleteEntry('inventory', 'inv002')" title="Permanent Delete">×</button>
+                            </div>
+                        </div>
+                        <button class="btn btn--primary" id="addInventoryBtn">Add Inventory Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dressing Register -->
+            <div id="register-8" class="register-content">
+                <h2>🩹 Dressing</h2>
+                <div class="dressing-content">
+                    <div class="dressing-placeholder">
+                        <h4>Daily Patient Dressing Records</h4>
+                        <div class="sample-dressing">
+                            <div class="dressing-record">
+                                <span>Bed M01 - Rajesh Kumar - Daily wound care</span>
+                                <span>07/09/2025</span>
+                                <button class="delete-btn" onclick="deleteEntry('dressing', 'dress001')" title="Permanent Delete">×</button>
+                            </div>
+                            <div class="dressing-record">
+                                <span>Bed F03 - Sunita Devi - Burn dressing change</span>
+                                <span>07/09/2025</span>
+                                <button class="delete-btn" onclick="deleteEntry('dressing', 'dress002')" title="Permanent Delete">×</button>
+                            </div>
+                        </div>
+                        <button class="btn btn--primary" id="addDressingBtn">Add Dressing Record</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div id="register-9" class="register-content">
+                <h2>💽 Data Management</h2>
+                <div class="data-management-content">
+                    <!-- Cloud Backup Section -->
+                    <div class="cloud-backup-section">
+                        <h3>☁️ Cloud Backup & Sync</h3>
+                        <div class="cloud-actions">
+                            <button id="googleSignInBtn" class="btn btn--primary" onclick="cloudSignIn()">
+                                🔐 Sign in to Google Drive
+                            </button>
+                            <button id="googleSignOutBtn" class="btn btn--secondary" onclick="cloudSignOut()" style="display:none">
+                                🚪 Sign Out
+                            </button>
+                            <button id="cloudBackupBtn" class="btn btn--success" onclick="performCloudBackup()" disabled>
+                                ☁️ Backup Now
+                            </button>
+                            <button id="cloudRestoreBtn" class="btn btn--warning" onclick="showRestoreOptions()" disabled>
+                                📥 Restore Backup
+                            </button>
+                        </div>
+                        <div id="syncStatus" class="sync-status"></div>
+                    </div>
+
+                    <div class="data-section">
+                        <h3>Data Backup & Restore</h3>
+                        <div class="data-actions">
+                            <button class="btn btn--primary" onclick="exportAllData()">📤 Export All Data</button>
+                            <button class="btn btn--secondary" onclick="importData()">📥 Import Data</button>
+                            <button class="btn btn--warning" onclick="clearAllData()">🗑️ Clear All Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="data-section">
+                        <h3>System Information</h3>
+                        <div class="system-info">
+                            <p><strong>Last Save:</strong> <span id="lastSaveTime">Never</span></p>
+                            <p><strong>Total Records:</strong> <span id="totalRecords">0</span></p>
+                            <p><strong>Storage Used:</strong> <span id="storageUsed">0 KB</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Patient List Modal -->
+    <div id="patientListModal" class="modal hidden">
+        <div class="modal-content patient-list-modal">
+            <div class="modal-header">
+                <h3>Ward 22A - Current Patient List</h3>
+                <button class="modal-close" onclick="closePatientListModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="patient-list-header">
+                    <div class="ward-title">
+                        <h2>Ward -22A</h2>
+                        <div class="date-display">Date - <span id="patientListDate"></span></div>
+                    </div>
+                    <div class="list-actions">
+                        <button class="btn btn--primary btn--sm" onclick="printPatientList()">🖨️ Print</button>
+                        <button class="btn btn--secondary btn--sm" onclick="downloadPatientList()">📥 Download</button>
+                    </div>
+                </div>
+                
+                <div class="patient-list-table-container" id="patientListTableContainer">
+                    <table class="patient-list-table" id="patientListTable">
+                        <thead>
+                            <tr>
+                                <th>Bed No.</th>
+                                <th>Patient Name</th>
+                                <th>Age</th>
+                                <th>Sex</th>
+                                <th>MRD</th>
+                                <th>Unit</th>
+                                <th>Diagnosis</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientListTableBody">
+                            <!-- Patient data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bed Modal -->
+    <div id="bedModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="bedModalTitle">Bed Details</h3>
+                <button class="modal-close" onclick="closeBedModal()">×</button>
+            </div>
+            <div class="modal-body" id="bedModalBody">
+                <!-- Content populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Admission Form Modal -->
+    <div id="admissionModal" class="modal hidden">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>Add New Patient Admission</h3>
+                <button class="modal-close" onclick="closeAdmissionModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="admissionForm" class="admission-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Patient Name *</label>
+                            <input type="text" name="patientName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Father's Name *</label>
+                            <input type="text" name="fatherName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Age *</label>
+                            <input type="number" name="age" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Sex *</label>
+                            <select name="sex" required>
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>MRD (Numbers only) *</label>
+                            <input type="text" name="mrd" pattern="[0-9]+" required>
+                        </div>
+                        <div class="form-group">
+                            <label>UHID (Numbers only) *</label>
+                            <input type="text" name="uhid" pattern="[0-9]+" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Unit (1-6) *</label>
+                            <select name="unit" required>
+                                <option value="">Select Unit</option>
+                                <option value="1">Unit 1</option>
+                                <option value="2">Unit 2</option>
+                                <option value="3">Unit 3</option>
+                                <option value="4">Unit 4</option>
+                                <option value="5">Unit 5</option>
+                                <option value="6">Unit 6</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bed Number *</label>
+                            <select name="bedNo" id="availableBedSelect" required>
+                                <option value="">Select Bed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Address *</label>
+                            <textarea name="address" required></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Diagnosis *</label>
+                            <textarea name="diagnosis" required></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>MLC Status *</label>
+                            <select name="mlcStatus" required>
+                                <option value="">Select</option>
+                                <option value="MLC">MLC</option>
+                                <option value="NMLC">NMLC</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Transfer From *</label>
+                            <select name="transferFrom" required onchange="toggleOtherTransfer(this)">
+                                <option value="">Select</option>
+                                <option value="BOPD/Casualty">BOPD/Casualty</option>
+                                <option value="BICU">BICU</option>
+                                <option value="Ward 22">Ward 22</option>
+                                <option value="Ward 23A">Ward 23A</option>
+                                <option value="Ward 23B">Ward 23B</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" id="otherTransferGroup" style="display: none;">
+                            <label>Other Transfer From</label>
+                            <input type="text" name="otherTransferFrom" placeholder="Enter ward/department name">
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn--secondary" onclick="closeAdmissionModal()">Cancel</button>
+                        <button type="submit" class="btn btn--primary">Add Patient</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Credentials Modal -->
+    <div id="credentialsModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Login Credentials</h3>
+                <button class="modal-close" onclick="closeCredentialsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="security-warning">
+                    ⚠️ Security password required for credential changes
+                </div>
+                <form id="credentialsForm">
+                    <div class="form-group">
+                        <label>Current Security Password</label>
+                        <input type="password" id="securityPasswordCheck" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Username</label>
+                        <input type="text" id="newUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Security Password</label>
+                        <input type="password" id="newSecurityPassword" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn--secondary" onclick="closeCredentialsModal()">Cancel</button>
+                        <button type="submit" class="btn btn--primary" onclick="updateCredentials()">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading hidden">
+        <div class="loading-spinner"></div>
+        <p>Saving data...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Include JavaScript Files -->
+    <script src="app.js"></script>
+</body>
+</html>
