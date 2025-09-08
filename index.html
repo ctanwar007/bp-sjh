@@ -3,444 +3,1443 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ward 22A - Safdarjung Hospital Management System</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Google APIs -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="encryption.js"></script>
-<script src="cloudBackup.js"></script>
-<script src="syncManager.js"></script>
-<script src="versionControl.js"></script>
-<script src="cloudSetup.js"></script>
+    <title>Ward 22A - Hospital Management System</title>
+    <style>
+        /* ===== GLOBAL STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== CARD STYLES ===== */
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .card-header h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .card-header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        /* ===== BUTTON STYLES ===== */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+            margin: 5px;
+        }
+
+        .btn--primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn--primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn--secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn--secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn--success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn--success:hover {
+            background: #229954;
+        }
+
+        .btn--warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn--warning:hover {
+            background: #e67e22;
+        }
+
+        .btn--danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn--danger:hover {
+            background: #c0392b;
+        }
+
+        .btn--info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn--info:hover {
+            background: #138496;
+        }
+
+        .btn--sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ===== MODE SELECTION STYLES ===== */
+        .mode-selection {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .mode-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            min-width: 250px;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .mode-card.admin {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .mode-card.view {
+            border-left: 5px solid #27ae60;
+        }
+
+        .mode-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .mode-card h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        /* ===== LOGIN STYLES ===== */
+        .login-form {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        /* ===== MAIN APP STYLES ===== */
+        .main-header {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .hospital-info h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .hospital-info p {
+            color: #7f8c8d;
+            margin-bottom: 0.25rem;
+        }
+
+        .mode-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .mode-badge.admin {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .mode-badge.view {
+            background: #27ae60;
+            color: white;
+        }
+
+        /* ===== NAVIGATION STYLES ===== */
+        .navigation {
+            background: white;
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-btn {
+            padding: 12px 20px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .nav-btn:hover {
+            background: #d5dbdb;
+        }
+
+        .nav-btn.active {
+            background: #3498db;
+            color: white;
+        }
+
+        /* ===== DASHBOARD STYLES ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #3498db;
+            display: block;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        /* ===== BED GRID STYLES ===== */
+        .beds-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .bed-box {
+            background: white;
+            border: 3px solid #ecf0f1;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bed-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .bed-box.vacant {
+            border-color: #95a5a6;
+            background: #f8f9fa;
+        }
+
+        .bed-box.occupied {
+            border-color: #90EE90;
+            background: rgba(144, 238, 144, 0.3);
+        }
+
+        .bed-box.occupied:hover {
+            background: rgba(144, 238, 144, 0.5);
+        }
+
+        .bed-box.onleave {
+            border-color: #f39c12;
+            background: rgba(243, 156, 18, 0.2);
+        }
+
+        .bed-number {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .bed-patient {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* ===== TABLE STYLES ===== */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #34495e;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:hover {
+            background: #e3f2fd;
+        }
+
+        /* ===== MODAL STYLES ===== */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            max-width: 600px;
+            max-height: 90vh;
+            width: 90%;
+            overflow-y: auto;
+        }
+
+        .modal-content.large {
+            max-width: 900px;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #95a5a6;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-close:hover {
+            color: #e74c3c;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== FORM STYLES ===== */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        /* ===== BADGE STYLES ===== */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* ===== DELETE BUTTON ===== */
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 0.5rem;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        /* ===== TOAST STYLES ===== */
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .toast {
+            background: #333;
+            color: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            animation: slideInRight 0.3s ease;
+        }
+
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #212529; }
+        .toast.info { background: #17a2b8; }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ===== LOADING INDICATOR ===== */
+        .loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== PATIENT TAG STYLES ===== */
+        .patient-tag {
+            background: #e7f3ff;
+            border: 1px solid #b3d7ff;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .patient-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        /* ===== TREATMENT STYLES ===== */
+        .treatment-section {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .medication-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .medication-item {
+            background: white;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .medication-info {
+            flex-grow: 1;
+        }
+
+        .medication-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .medication-dose {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .medication-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .mode-selection {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .main-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .beds-container {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 0.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 20px;
+            }
+
+            .data-table {
+                font-size: 0.8rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+            }
+        }
+
+        /* ===== REGISTER CONTENT ===== */
+        .register-content {
+            display: none;
+        }
+
+        .register-content.active {
+            display: block;
+        }
+
+        /* ===== DRESSING CONTROLS ===== */
+        .dressing-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .dressing-controls label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        /* ===== CENSUS REPORT ===== */
+        .census-report {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .census-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .census-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .census-item label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .census-item span {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        /* ===== CLOUD BACKUP SECTION ===== */
+        .cloud-backup-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .sync-status {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-left: 1rem;
+        }
+
+        .sync-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        /* ===== SYSTEM INFO ===== */
+        .system-info {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+        }
+
+        .info-item strong {
+            color: #495057;
+        }
+
+        /* ===== EDIT FORM STYLES ===== */
+        .edit-form {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .edit-form .form-row {
+            margin-bottom: 0.75rem;
+        }
+
+        .edit-form .form-group {
+            margin-bottom: 0.75rem;
+        }
+    </style>
 </head>
 <body>
-    <!-- Mode Selection Screen -->
-    <div id="modeSelection" class="mode-selection">
-        <div class="mode-container">
-            <div class="hospital-header">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%23007bff'/%3E%3Ctext x='50' y='58' text-anchor='middle' fill='white' font-size='60' font-weight='bold'%3EH%3C/text%3E%3C/svg%3E" alt="Hospital Logo" class="hospital-logo">
-                <h1>VMMC & Safdarjung Hospital</h1>
-                <h2>Burns and Plastic Surgery Department</h2>
-                <h3>Ward 22A Management System</h3>
-                <p class="hospital-info">Ring Road, New Delhi - 110029</p>
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-indicator hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- MODE SELECTION SCREEN -->
+        <div id="modeSelection" class="card">
+            <div class="card-header">
+                <h1>Ward 22A</h1>
+                <p>Hospital Management System</p>
+                <p>VMMC & Safdarjung Hospital, New Delhi</p>
+                <p>Burns & Plastic Surgery Department</p>
             </div>
             
-            <div class="mode-options">
-                <div class="mode-card" onclick="selectMode('view')">
+            <div class="mode-selection">
+                <div class="mode-card view" onclick="selectMode('view')">
                     <div class="mode-icon">👁️</div>
-                    <h4>View Only Mode</h4>
-                    <p>Read-only access to all registers and patient data</p>
-                    <ul class="feature-list">
-                        <li>View patient records</li>
-                        <li>Check bed occupancy</li>
-                        <li>Access all registers</li>
-                        <li>Generate reports</li>
-                    </ul>
-                    <button class="btn btn--secondary">Enter View Mode</button>
+                    <h3>View Only Mode</h3>
+                    <p>Browse patient information and ward status without making changes</p>
+                    <div class="btn btn--success">Enter View Mode</div>
                 </div>
                 
-                <div class="mode-card" onclick="selectMode('admin')">
-                    <div class="mode-icon">🔐</div>
-                    <h4>Admin Mode</h4>
-                    <p>Full access with edit and management capabilities</p>
-                    <ul class="feature-list">
-                        <li>Add/Edit patient records</li>
-                        <li>Manage staff duties</li>
-                        <li>Transfer/Discharge patients</li>
-                        <li>Full register control</li>
-                    </ul>
-                    <button class="btn btn--primary">Enter Admin Mode</button>
+                <div class="mode-card admin" onclick="selectMode('admin')">
+                    <div class="mode-icon">⚙️</div>
+                    <h3>Admin Mode</h3>
+                    <p>Full access to manage patients, records, and system settings</p>
+                    <div class="btn btn--danger">Enter Admin Mode</div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Login Screen -->
-    <div id="loginScreen" class="login-screen hidden">
-        <div class="login-container">
-            <div class="login-header">
-                <h3>🏥 Admin Login - Ward 22A</h3>
-                <p>Enter your credentials to access administrative features</p>
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen" class="hidden">
+            <div class="card">
+                <div class="card-header">
+                    <h1>🔐 Admin Login</h1>
+                    <p>Enter your credentials to access admin features</p>
+                </div>
+                
+                <div class="login-form">
+                    <div id="loginError" class="error-message hidden"></div>
+                    
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" class="form-control" placeholder="Enter username" autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" class="form-control" placeholder="Enter password" autocomplete="current-password">
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                        <button class="btn btn--secondary" onclick="backToModeSelection()">← Back</button>
+                        <button class="btn btn--primary" onclick="attemptLogin()">Login</button>
+                    </div>
+                </div>
             </div>
-            
-            <form id="loginForm" class="login-form" onsubmit="return false;">
-                <div class="form-group">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" id="username" class="form-control" required autocomplete="username">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input type="password" id="password" class="form-control" required autocomplete="current-password">
-                </div>
-                
-                <div id="loginError" class="error-message hidden"></div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn--secondary" onclick="backToModeSelection()">Back</button>
-                    <button type="submit" class="btn btn--primary" onclick="attemptLogin()">Login</button>
-                </div>
-                
-                <div class="login-help">
-                    <small>Default credentials: ward22a / zxcvbnm1234</small>
-                </div>
-            </form>
         </div>
-    </div>
 
-    <!-- Main Application -->
-    <div id="mainApp" class="main-app hidden">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-content">
+        <!-- MAIN APPLICATION -->
+        <div id="mainApp" class="hidden">
+            <!-- Header -->
+            <div class="main-header">
                 <div class="hospital-info">
-                    <h1>Ward 22A Dashboard</h1>
+                    <h1>Ward 22A - HMS</h1>
+                    <p>VMMC & Safdarjung Hospital</p>
                     <p>Burns & Plastic Surgery Department</p>
-                    <span class="date-time" id="currentDateTime"></span>
+                    <p id="currentDateTime">Loading...</p>
                 </div>
-                <div class="header-actions">
-                    <span id="currentMode" class="mode-badge">View Mode</span>
-                    <button class="btn btn--outline btn--sm" onclick="changeLoginCredentials()" id="changeCredsBtn">
-                        ⚙️ Change Login
-                    </button>
-                    <button class="btn btn--primary btn--sm" onclick="saveData()">
-                        💾 Save Data
-                    </button>
-                    <button class="btn btn--secondary btn--sm" onclick="logout()">
-                        🚪 Logout
-                    </button>
+                
+                <div style="text-align: right;">
+                    <div id="currentMode" class="mode-badge">View Mode</div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn--secondary btn--sm" onclick="logout()">Logout</button>
+                        <button id="changeCredsBtn" class="btn btn--warning btn--sm admin-btn" onclick="changeLoginCredentials()">Change Login</button>
+                    </div>
                 </div>
             </div>
-        </header>
 
-        <!-- Navigation -->
-        <nav class="main-nav">
-            <div class="nav-container">
-                <button class="nav-btn active" onclick="showRegister(0)" data-register="0">
-                    📊 Dashboard
-                </button>
-                <button class="nav-btn" onclick="showRegister(1)" data-register="1">
-                    📝 Admission
-                </button>
-                <button class="nav-btn" onclick="showRegister(2)" data-register="2">
-                    🏠 Discharge
-                </button>
-                <button class="nav-btn" onclick="showRegister(3)" data-register="3">
-                    🏥 Treatment
-                </button>
-                <button class="nav-btn" onclick="showRegister(4)" data-register="4">
-                    📋 Daily Census
-                </button>
-                <button class="nav-btn" onclick="showRegister(5)" data-register="5">
-                    🔄 Transfer Out
-                </button>
-                <button class="nav-btn" onclick="showRegister(6)" data-register="6">
-                    👥 Staff Duty
-                </button>
-                <button class="nav-btn" onclick="showRegister(7)" data-register="7">
-                    📦 Inventory
-                </button>
-                <button class="nav-btn" onclick="showRegister(8)" data-register="8">
-                    🩹 Dressing
-                </button>
-                <button class="nav-btn" onclick="showRegister(9)" data-register="9" id="dataManagementTab">
-                    💽 Data Management
-                </button>
+            <!-- Navigation -->
+            <div class="navigation">
+                <div class="nav-buttons">
+                    <button class="nav-btn active" data-register="0" onclick="showRegister(0)">🏥 Dashboard</button>
+                    <button class="nav-btn" data-register="1" onclick="showRegister(1)">📝 Admission</button>
+                    <button class="nav-btn" data-register="2" onclick="showRegister(2)">🚪 Discharge</button>
+                    <button class="nav-btn" data-register="3" onclick="showRegister(3)">👥 Treatment</button>
+                    <button class="nav-btn" data-register="6" onclick="showRegister(6)">🩹 Dressing</button>
+                    <button class="nav-btn" data-register="4" onclick="showRegister(4)">📊 Census</button>
+                    <button class="nav-btn" data-register="5" onclick="showRegister(5)">💾 Data</button>
+                </div>
             </div>
-        </nav>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Dashboard (Register 0) -->
+            <!-- REGISTER 0: DASHBOARD -->
             <div id="register-0" class="register-content active">
-                <div class="dashboard-stats">
-                    <div class="stat-card">
-                        <h3 id="totalPatients">0</h3>
-                        <p>Total Patients</p>
+                <div class="card">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span id="totalPatients" class="stat-number">0</span>
+                            <div class="stat-label">Total Patients</div>
+                        </div>
+                        <div class="stat-card">
+                            <span id="availableBeds" class="stat-number">32</span>
+                            <div class="stat-label">Available Beds</div>
+                        </div>
+                        <div class="stat-card" style="cursor: pointer;" title="Click to view details">
+                            <span id="onLeavePatients" class="stat-number">0</span>
+                            <div class="stat-label">On Leave</div>
+                        </div>
+                        <div class="stat-card">
+                            <span id="mlcCases" class="stat-number">0</span>
+                            <div class="stat-label">MLC Cases</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <h3 id="availableBeds">32</h3>
-                        <p>Available Beds</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="onLeavePatients">0</h3>
-                        <p>On Leave</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3 id="mlcCases">0</h3>
-                        <p>MLC Cases</p>
-                    </div>
-                </div>
 
-                <!-- Dashboard Actions -->
-                <div class="dashboard-actions">
-                    <button class="btn btn--info btn--sm" onclick="showPatientListModal()">
-                        📋 View Patient List
-                    </button>
-                    <button class="btn btn--primary btn--sm" onclick="showAdmissionForm()" id="addPatientBtn">
-                        ➕ Add New Patient
-                    </button>
-                    <button class="btn btn--secondary btn--sm" onclick="exportData()">
-                        📥 Export Data
-                    </button>
-                </div>
-
-                <!-- 32 Beds Container -->
-                <div class="beds-section">
-                    <h2>Ward 22A - Bed Layout (32 Beds)</h2>
-                    <div class="bed-legend">
-                        <div class="legend-item"><div class="legend-color vacant"></div> Vacant</div>
-                        <div class="legend-item"><div class="legend-color occupied"></div> Occupied</div>
-                        <div class="legend-item"><div class="legend-color onleave"></div> On Leave</div>
-                        <div class="legend-item"><div class="legend-color critical"></div> Critical</div>
+                    <!-- Action Buttons -->
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <button id="addPatientBtn" class="btn btn--primary admin-btn" onclick="showAdmissionForm()">➕ Add Patient</button>
+                        <button class="btn btn--info" onclick="showPatientListModal()">📋 Patient List</button>
+                        <button class="btn btn--success" onclick="printPatientList()">🖨️ Print List</button>
+                        <button class="btn btn--secondary" onclick="downloadPatientList()">📥 Download CSV</button>
                     </div>
-                    <div class="beds-container" id="bedsContainer">
-                        <!-- Beds will be generated by JavaScript -->
+
+                    <!-- Beds Grid -->
+                    <h3 style="margin-bottom: 1rem; color: #2c3e50;">Ward Layout (32 Beds)</h3>
+                    <div id="bedsContainer" class="beds-container">
+                        <!-- Beds will be rendered here by JavaScript -->
                     </div>
                 </div>
             </div>
 
-            <!-- Admission Register -->
+            <!-- REGISTER 1: ADMISSION -->
             <div id="register-1" class="register-content">
-                <h2>📝 Admission</h2>
-                <div class="register-actions">
-                    <button class="btn btn--primary" onclick="showAdmissionForm()" id="addAdmissionBtn">+ Add New Admission</button>
-                    <button class="btn btn--secondary" onclick="exportRegister(1)">📄 Export CSV</button>
-                </div>
-                <div class="table-container">
-                    <table id="admissionTable" class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Patient Name</th>
-                                <th>Father's Name</th>
-                                <th>Age</th>
-                                <th>Sex</th>
-                                <th>MRD</th>
-                                <th>UHID</th>
-                                <th>Unit</th>
-                                <th>Bed No</th>
-                                <th>Address</th>
-                                <th>Diagnosis</th>
-                                <th>MLC Status</th>
-                                <th>Admission Date/Time</th>
-                                <th>Transfer From</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admissionTableBody">
-                            <!-- Data populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Discharge Register -->
-            <div id="register-2" class="register-content">
-                <h2>🏠 Discharge</h2>
-                <div class="table-container">
-                    <table id="dischargeTable" class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Patient Name</th>
-                                <th>Age</th>
-                                <th>Sex</th>
-                                <th>Bed No</th>
-                                <th>MRD</th>
-                                <th>Unit</th>
-                                <th>Diagnosis</th>
-                                <th>MLC Status</th>
-                                <th>Admission Date/Time</th>
-                                <th>Discharge Date/Time</th>
-                                <th>Discharge Type</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dischargeTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Treatment Register -->
-            <div id="register-3" class="register-content">
-                <h2>🏥 Treatment (Main Ward Register)</h2>
-                <div class="treatment-overview">
-                    <div class="current-patients" id="currentPatientsList">
-                        <!-- Current patients with tabs will be populated here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Daily Census -->
-            <div id="register-4" class="register-content">
-                <h2>📋 Daily Census Report</h2>
-                <div class="census-controls">
-                    <input type="date" id="censusDate" class="form-control">
-                    <button class="btn btn--primary" onclick="generateCensusReport()">Generate Report</button>
-                </div>
-                <div class="census-data" id="censusData"></div>
-            </div>
-
-            <!-- Transfer Out Register -->
-            <div id="register-5" class="register-content">
-                <h2>🔄 Transfer Out</h2>
-                <div class="table-container">
-                    <table id="transferTable" class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Patient Name</th>
-                                <th>MRD</th>
-                                <th>UHID</th>
-                                <th>MLC Status</th>
-                                <th>Transfer Destination</th>
-                                <th>Transfer Date/Time</th>
-                                <th>Reason</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transferTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Staff Duty Register -->
-            <div id="register-6" class="register-content">
-                <h2>👥 Staff Duty</h2>
-                <div class="staff-tabs">
-                    <button class="tab-btn active" onclick="showStaffTab('current')">Current Day</button>
-                    <button class="tab-btn" onclick="showStaffTab('history')">Duty History</button>
-                </div>
-                
-                <div id="staffCurrent" class="staff-content active">
-                    <div class="staff-duty-today" id="staffDutyToday"></div>
-                </div>
-                
-                <div id="staffHistory" class="staff-content">
-                    <div class="history-controls">
-                        <label>Select Date:</label>
-                        <input type="date" id="historyDate" class="form-control" onchange="loadStaffHistory()">
-                        <div class="quick-date-buttons">
-                            <button class="btn btn--sm" onclick="selectQuickDate('yesterday')">Yesterday</button>
-                            <button class="btn btn--sm" onclick="selectQuickDate('lastweek')">Last Week</button>
-                            <button class="btn btn--sm" onclick="selectQuickDate('lastmonth')">Last Month</button>
-                        </div>
-                    </div>
-                    <div class="staff-history-data" id="staffHistoryData"></div>
-                </div>
-            </div>
-
-            <!-- Inventory Register -->
-            <div id="register-7" class="register-content">
-                <h2>📦 Inventory</h2>
-                <div class="inventory-content">
-                    <div class="inventory-placeholder">
-                        <h4>Inventory Management</h4>
-                        <div class="sample-inventory">
-                            <div class="inventory-item">
-                                <span>Surgical Gloves - Box of 100</span>
-                                <span>Stock: 25</span>
-                                <button class="delete-btn" onclick="deleteEntry('inventory', 'inv001')" title="Permanent Delete">×</button>
-                            </div>
-                            <div class="inventory-item">
-                                <span>Wound Dressing Kit</span>
-                                <span>Stock: 15</span>
-                                <button class="delete-btn" onclick="deleteEntry('inventory', 'inv002')" title="Permanent Delete">×</button>
-                            </div>
-                        </div>
-                        <button class="btn btn--primary" id="addInventoryBtn">Add Inventory Item</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dressing Register -->
-            <div id="register-8" class="register-content">
-                <h2>🩹 Dressing</h2>
-                <div class="dressing-content">
-                    <div class="dressing-placeholder">
-                        <h4>Daily Patient Dressing Records</h4>
-                        <div class="sample-dressing">
-                            <div class="dressing-record">
-                                <span>Bed M01 - Rajesh Kumar - Daily wound care</span>
-                                <span>07/09/2025</span>
-                                <button class="delete-btn" onclick="deleteEntry('dressing', 'dress001')" title="Permanent Delete">×</button>
-                            </div>
-                            <div class="dressing-record">
-                                <span>Bed F03 - Sunita Devi - Burn dressing change</span>
-                                <span>07/09/2025</span>
-                                <button class="delete-btn" onclick="deleteEntry('dressing', 'dress002')" title="Permanent Delete">×</button>
-                            </div>
-                        </div>
-                        <button class="btn btn--primary" id="addDressingBtn">Add Dressing Record</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Data Management -->
-            <div id="register-9" class="register-content">
-                <h2>💽 Data Management</h2>
-                <div class="data-management-content">
-                    <!-- Cloud Backup Section -->
-                    <div class="cloud-backup-section">
-                        <h3>☁️ Cloud Backup & Sync</h3>
-                        <div class="cloud-actions">
-                            <button id="googleSignInBtn" class="btn btn--primary" onclick="cloudSignIn()">
-                                🔐 Sign in to Google Drive
-                            </button>
-                            <button id="googleSignOutBtn" class="btn btn--secondary" onclick="cloudSignOut()" style="display:none">
-                                🚪 Sign Out
-                            </button>
-                            <button id="cloudBackupBtn" class="btn btn--success" onclick="performCloudBackup()" disabled>
-                                ☁️ Backup Now
-                            </button>
-                            <button id="cloudRestoreBtn" class="btn btn--warning" onclick="showRestoreOptions()" disabled>
-                                📥 Restore Backup
-                            </button>
-                        </div>
-                        <div id="syncStatus" class="sync-status"></div>
-                    </div>
-
-                    <div class="data-section">
-                        <h3>Data Backup & Restore</h3>
-                        <div class="data-actions">
-                            <button class="btn btn--primary" onclick="exportAllData()">📤 Export All Data</button>
-                            <button class="btn btn--secondary" onclick="importData()">📥 Import Data</button>
-                            <button class="btn btn--warning" onclick="clearAllData()">🗑️ Clear All Data</button>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h3>Admission Register</h3>
+                        <div>
+                            <button id="addAdmissionBtn" class="btn btn--primary admin-btn" onclick="showAdmissionForm()">➕ New Admission</button>
+                            <button class="btn btn--info" onclick="exportRegister(1)">📤 Export</button>
                         </div>
                     </div>
                     
-                    <div class="data-section">
-                        <h3>System Information</h3>
-                        <div class="system-info">
-                            <p><strong>Last Save:</strong> <span id="lastSaveTime">Never</span></p>
-                            <p><strong>Total Records:</strong> <span id="totalRecords">0</span></p>
-                            <p><strong>Storage Used:</strong> <span id="storageUsed">0 KB</span></p>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Patient Name</th>
+                                    <th>Father Name</th>
+                                    <th>Age</th>
+                                    <th>Sex</th>
+                                    <th>Phone</th>
+                                    <th>MRD</th>
+                                    <th>UHID</th>
+                                    <th>Unit</th>
+                                    <th>Bed No.</th>
+                                    <th>Address</th>
+                                    <th>Diagnosis</th>
+                                    <th>MLC Status</th>
+                                    <th>Admission</th>
+                                    <th>Transfer From</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admissionTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTER 2: DISCHARGE -->
+            <div id="register-2" class="register-content">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h3>Discharge Register</h3>
+                        <div>
+                            <button class="btn btn--info" onclick="exportRegister(2)">📤 Export</button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Patient Name</th>
+                                    <th>Age</th>
+                                    <th>Sex</th>
+                                    <th>Bed No.</th>
+                                    <th>MRD</th>
+                                    <th>Unit</th>
+                                    <th>Diagnosis</th>
+                                    <th>MLC Status</th>
+                                    <th>Admission</th>
+                                    <th>Discharge</th>
+                                    <th>Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dischargeTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTER 3: TREATMENT -->
+            <div id="register-3" class="register-content">
+                <div class="card">
+                    <div id="currentPatientsList">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTER 6: DRESSING -->
+            <div id="register-6" class="register-content">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h3>Dressing Register</h3>
+                        <div>
+                            <button id="addDressingBtn" class="btn btn--primary admin-btn" onclick="showDressingForm()">➕ Add Record</button>
+                        </div>
+                    </div>
+                    
+                    <div id="dressingContainer">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTER 4: CENSUS -->
+            <div id="register-4" class="register-content">
+                <div class="card">
+                    <h3 style="margin-bottom: 2rem;">Daily Census Report</h3>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <label for="censusDate">Select Date:</label>
+                        <input type="date" id="censusDate" class="form-control" style="max-width: 200px; display: inline-block; margin-left: 1rem;">
+                        <button class="btn btn--primary" onclick="generateCensusReport()" style="margin-left: 1rem;">Generate Report</button>
+                    </div>
+                    
+                    <div id="censusData">
+                        <!-- Census data will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGISTER 5: DATA MANAGEMENT -->
+            <div id="register-5" class="register-content">
+                <div class="card">
+                    <h3 style="margin-bottom: 2rem;">Data Management</h3>
+                    
+                    <!-- Cloud Backup Section -->
+                    <div class="cloud-backup-section">
+                        <h4>☁️ Cloud Backup</h4>
+                        <p>Backup and restore your ward data securely using Google Drive.</p>
+                        <div style="margin-top: 1rem;">
+                            <button id="googleSignInBtn" class="btn btn--primary" onclick="cloudSignIn()">🔐 Sign in to Google Drive</button>
+                            <button id="cloudBackupBtn" class="btn btn--success" onclick="performCloudBackup()">☁️ Backup Now</button>
+                            <button id="cloudRestoreBtn" class="btn btn--warning" onclick="showRestoreOptions()">📥 Restore from Cloud</button>
+                            <button class="btn btn--secondary" onclick="cloudSignOut()">🚪 Sign Out</button>
+                            <span id="syncStatus" class="sync-status">Not connected</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Export/Import -->
+                    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h4>📤 Data Export/Import</h4>
+                        <div style="margin-top: 1rem;">
+                            <button class="btn btn--info" onclick="exportAllData()">📤 Export All Data</button>
+                            <button class="btn btn--secondary" onclick="importData()">📥 Import Data</button>
+                            <button class="btn btn--danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Save Data -->
+                    <div style="background: #e7f3ff; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h4>💾 Manual Save</h4>
+                        <button class="btn btn--primary" onclick="saveData()">💾 Save Data Now</button>
+                    </div>
+                    
+                    <!-- System Information -->
+                    <div class="system-info">
+                        <h4>ℹ️ System Information</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span>Last Save:</span>
+                                <strong id="lastSaveTime">Never</strong>
+                            </div>
+                            <div class="info-item">
+                                <span>Total Records:</span>
+                                <strong id="totalRecords">0</strong>
+                            </div>
+                            <div class="info-item">
+                                <span>Storage Used:</span>
+                                <strong id="storageUsed">0 KB</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 
-    <!-- Patient List Modal -->
-    <div id="patientListModal" class="modal hidden">
-        <div class="modal-content patient-list-modal">
+    <!-- BED DETAILS MODAL -->
+    <div id="bedModal" class="modal hidden">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3>Ward 22A - Current Patient List</h3>
+                <h3 id="bedModalTitle">Bed Details</h3>
+                <button class="modal-close" onclick="closeBedModal()">×</button>
+            </div>
+            <div class="modal-body" id="bedModalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- PATIENT TREATMENT MODAL -->
+    <div id="treatmentModal" class="modal hidden">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 id="treatmentModalTitle">Patient Treatment</h3>
+                <button class="modal-close" onclick="closeTreatmentModal()">×</button>
+            </div>
+            <div class="modal-body" id="treatmentModalBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT PATIENT MODAL -->
+    <div id="editPatientModal" class="modal hidden">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 id="editPatientModalTitle">Edit Patient</h3>
+                <button class="modal-close" onclick="closeEditPatientModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="editPatientForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Patient Name:</label>
+                            <input type="text" name="patientName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Father's Name:</label>
+                            <input type="text" name="fatherName" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Age:</label>
+                            <input type="number" name="age" class="form-control" min="0" max="120" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Sex:</label>
+                            <select name="sex" class="form-control" required>
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone Number:</label>
+                            <input type="tel" name="phoneNo" class="form-control" pattern="[0-9]{10}">
+                        </div>
+                        <div class="form-group">
+                            <label>MRD:</label>
+                            <input type="number" name="mrd" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>UHID:</label>
+                            <input type="number" name="uhid" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Unit:</label>
+                            <select name="unit" class="form-control" required>
+                                <option value="">Select Unit</option>
+                                <option value="1">Unit 1</option>
+                                <option value="2">Unit 2</option>
+                                <option value="3">Unit 3</option>
+                                <option value="4">Unit 4</option>
+                                <option value="5">Unit 5</option>
+                                <option value="6">Unit 6</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address:</label>
+                        <textarea name="address" class="form-control" rows="2" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Diagnosis:</label>
+                        <textarea name="diagnosis" class="form-control" rows="2" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>MLC Status:</label>
+                            <select name="mlcStatus" class="form-control" required>
+                                <option value="">Select</option>
+                                <option value="MLC">MLC</option>
+                                <option value="NMLC">NMLC</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Bed Assignment:</label>
+                            <select name="bedNo" class="form-control" id="editBedSelect">
+                                <option value="">Select Bed</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="patientId" id="editPatientId">
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn--secondary" onclick="closeEditPatientModal()">Cancel</button>
+                        <button type="submit" class="btn btn--primary">Update Patient</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMISSION MODAL -->
+    <div id="admissionModal" class="modal hidden">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>➕ New Patient Admission</h3>
+                <button class="modal-close" onclick="closeAdmissionModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="admissionForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Patient Name:</label>
+                            <input type="text" name="patientName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Father's Name:</label>
+                            <input type="text" name="fatherName" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Age:</label>
+                            <input type="number" name="age" class="form-control" min="0" max="120" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Sex:</label>
+                            <select name="sex" class="form-control" required>
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone Number:</label>
+                            <input type="tel" name="phoneNo" class="form-control" pattern="[0-9]{10}" title="Enter 10-digit phone number">
+                        </div>
+                        <div class="form-group">
+                            <label>MRD:</label>
+                            <input type="number" name="mrd" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>UHID:</label>
+                            <input type="number" name="uhid" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Unit:</label>
+                            <select name="unit" class="form-control" required>
+                                <option value="">Select Unit</option>
+                                <option value="1">Unit 1</option>
+                                <option value="2">Unit 2</option>
+                                <option value="3">Unit 3</option>
+                                <option value="4">Unit 4</option>
+                                <option value="5">Unit 5</option>
+                                <option value="6">Unit 6</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Admission Date:</label>
+                            <input type="date" name="admissionDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Admission Time:</label>
+                            <input type="time" name="admissionTime" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Transfer Time:</label>
+                            <input type="time" name="transferTime" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Available Bed:</label>
+                            <select id="availableBedSelect" name="bedNo" class="form-control">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Address:</label>
+                        <textarea name="address" class="form-control" rows="2" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Diagnosis:</label>
+                        <textarea name="diagnosis" class="form-control" rows="2" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>MLC Status:</label>
+                            <select name="mlcStatus" class="form-control" required>
+                                <option value="">Select</option>
+                                <option value="MLC">MLC</option>
+                                <option value="NMLC">NMLC</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Transfer From:</label>
+                            <select name="transferFrom" class="form-control" onchange="toggleOtherTransfer(this)" required>
+                                <option value="">Select</option>
+                                <option value="BOPD/Casualty">BOPD/Casualty</option>
+                                <option value="Ward 23A">Ward 23A</option>
+                                <option value="BICU">BICU</option>
+                                <option value="Emergency">Emergency</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="otherTransferGroup" class="form-group" style="display: none;">
+                        <label>Other Transfer From:</label>
+                        <input type="text" name="otherTransferFrom" class="form-control">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn--secondary" onclick="closeAdmissionModal()">Cancel</button>
+                        <button type="submit" class="btn btn--primary">Add Patient</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- PATIENT LIST MODAL -->
+    <div id="patientListModal" class="modal hidden">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>📋 Current Patient List - <span id="patientListDate">Today</span></h3>
                 <button class="modal-close" onclick="closePatientListModal()">×</button>
             </div>
             <div class="modal-body">
-                <div class="patient-list-header">
-                    <div class="ward-title">
-                        <h2>Ward -22A</h2>
-                        <div class="date-display">Date - <span id="patientListDate"></span></div>
-                    </div>
-                    <div class="list-actions">
-                        <button class="btn btn--primary btn--sm" onclick="printPatientList()">🖨️ Print</button>
-                        <button class="btn btn--secondary btn--sm" onclick="downloadPatientList()">📥 Download</button>
-                    </div>
+                <div style="margin-bottom: 1rem; text-align: right;">
+                    <button class="btn btn--success" onclick="printPatientList()">🖨️ Print</button>
+                    <button class="btn btn--info" onclick="downloadPatientList()">📥 Download</button>
                 </div>
                 
-                <div class="patient-list-table-container" id="patientListTableContainer">
-                    <table class="patient-list-table" id="patientListTable">
+                <div class="table-container">
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>Bed No.</th>
@@ -453,7 +1452,7 @@
                             </tr>
                         </thead>
                         <tbody id="patientListTableBody">
-                            <!-- Patient data will be populated by JavaScript -->
+                            <!-- Data will be populated by JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -461,178 +1460,101 @@
         </div>
     </div>
 
-    <!-- Bed Modal -->
-    <div id="bedModal" class="modal hidden">
+    <!-- ADD MEDICATION MODAL -->
+    <div id="addMedicationModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="bedModalTitle">Bed Details</h3>
-                <button class="modal-close" onclick="closeBedModal()">×</button>
-            </div>
-            <div class="modal-body" id="bedModalBody">
-                <!-- Content populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Admission Form Modal -->
-    <div id="admissionModal" class="modal hidden">
-        <div class="modal-content large">
-            <div class="modal-header">
-                <h3>Add New Patient Admission</h3>
-                <button class="modal-close" onclick="closeAdmissionModal()">×</button>
+                <h3>💊 Add Medication</h3>
+                <button class="modal-close" onclick="closeAddMedicationModal()">×</button>
             </div>
             <div class="modal-body">
-                <form id="admissionForm" class="admission-form">
+                <form id="addMedicationForm">
+                    <div class="form-group">
+                        <label>Medication Name:</label>
+                        <input type="text" name="medicationName" class="form-control" required placeholder="e.g., Paracetamol">
+                    </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Patient Name *</label>
-                            <input type="text" name="patientName" required>
+                            <label>Dosage:</label>
+                            <input type="text" name="dosage" class="form-control" required placeholder="e.g., 500mg">
                         </div>
                         <div class="form-group">
-                            <label>Father's Name *</label>
-                            <input type="text" name="fatherName" required>
+                            <label>Frequency:</label>
+                            <input type="text" name="frequency" class="form-control" required placeholder="e.g., TID, BID">
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Age *</label>
-                            <input type="number" name="age" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Sex *</label>
-                            <select name="sex" required>
-                                <option value="">Select</option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>MRD (Numbers only) *</label>
-                            <input type="text" name="mrd" pattern="[0-9]+" required>
-                        </div>
-                        <div class="form-group">
-                            <label>UHID (Numbers only) *</label>
-                            <input type="text" name="uhid" pattern="[0-9]+" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Unit (1-6) *</label>
-                            <select name="unit" required>
-                                <option value="">Select Unit</option>
-                                <option value="1">Unit 1</option>
-                                <option value="2">Unit 2</option>
-                                <option value="3">Unit 3</option>
-                                <option value="4">Unit 4</option>
-                                <option value="5">Unit 5</option>
-                                <option value="6">Unit 6</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Bed Number *</label>
-                            <select name="bedNo" id="availableBedSelect" required>
-                                <option value="">Select Bed</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label>Address *</label>
-                            <textarea name="address" required></textarea>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group full-width">
-                            <label>Diagnosis *</label>
-                            <textarea name="diagnosis" required></textarea>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>MLC Status *</label>
-                            <select name="mlcStatus" required>
-                                <option value="">Select</option>
-                                <option value="MLC">MLC</option>
-                                <option value="NMLC">NMLC</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Transfer From *</label>
-                            <select name="transferFrom" required onchange="toggleOtherTransfer(this)">
-                                <option value="">Select</option>
-                                <option value="BOPD/Casualty">BOPD/Casualty</option>
-                                <option value="BICU">BICU</option>
-                                <option value="Ward 22">Ward 22</option>
-                                <option value="Ward 23A">Ward 23A</option>
-                                <option value="Ward 23B">Ward 23B</option>
+                            <label>Route:</label>
+                            <select name="route" class="form-control" required>
+                                <option value="">Select Route</option>
+                                <option value="Oral">Oral</option>
+                                <option value="IV">IV</option>
+                                <option value="IM">IM</option>
+                                <option value="Topical">Topical</option>
                                 <option value="Other">Other</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group" id="otherTransferGroup" style="display: none;">
-                            <label>Other Transfer From</label>
-                            <input type="text" name="otherTransferFrom" placeholder="Enter ward/department name">
+                        <div class="form-group">
+                            <label>Duration:</label>
+                            <input type="text" name="duration" class="form-control" placeholder="e.g., 7 days">
                         </div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label>Instructions:</label>
+                        <textarea name="instructions" class="form-control" rows="2" placeholder="Special instructions or notes"></textarea>
+                    </div>
+                    
+                    <input type="hidden" name="patientId" id="medicationPatientId">
+                    
                     <div class="form-actions">
-                        <button type="button" class="btn btn--secondary" onclick="closeAdmissionModal()">Cancel</button>
-                        <button type="submit" class="btn btn--primary">Add Patient</button>
+                        <button type="button" class="btn btn--secondary" onclick="closeAddMedicationModal()">Cancel</button>
+                        <button type="submit" class="btn btn--primary">Add Medication</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Change Credentials Modal -->
+    <!-- CREDENTIALS MODAL -->
     <div id="credentialsModal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Change Login Credentials</h3>
+                <h3>🔑 Change Login Credentials</h3>
                 <button class="modal-close" onclick="closeCredentialsModal()">×</button>
             </div>
             <div class="modal-body">
-                <div class="security-warning">
-                    ⚠️ Security password required for credential changes
+                <div class="form-group">
+                    <label>Current Security Password:</label>
+                    <input type="password" id="securityPasswordCheck" class="form-control" placeholder="Enter current security password">
                 </div>
-                <form id="credentialsForm">
-                    <div class="form-group">
-                        <label>Current Security Password</label>
-                        <input type="password" id="securityPasswordCheck" required>
-                    </div>
-                    <div class="form-group">
-                        <label>New Username</label>
-                        <input type="text" id="newUsername" required>
-                    </div>
-                    <div class="form-group">
-                        <label>New Password</label>
-                        <input type="password" id="newPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label>New Security Password</label>
-                        <input type="password" id="newSecurityPassword" required>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn btn--secondary" onclick="closeCredentialsModal()">Cancel</button>
-                        <button type="submit" class="btn btn--primary" onclick="updateCredentials()">Update</button>
-                    </div>
-                </form>
+                
+                <div class="form-group">
+                    <label>New Username:</label>
+                    <input type="text" id="newUsername" class="form-control" placeholder="Enter new username">
+                </div>
+                
+                <div class="form-group">
+                    <label>New Password:</label>
+                    <input type="password" id="newPassword" class="form-control" placeholder="Enter new password">
+                </div>
+                
+                <div class="form-group">
+                    <label>New Security Password:</label>
+                    <input type="password" id="newSecurityPassword" class="form-control" placeholder="Enter new security password">
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn--secondary" onclick="closeCredentialsModal()">Cancel</button>
+                    <button class="btn btn--primary" onclick="updateCredentials()">Update</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Loading Indicator -->
-    <div id="loadingIndicator" class="loading hidden">
-        <div class="loading-spinner"></div>
-        <p>Saving data...</p>
-    </div>
-
-    <!-- Toast Notifications -->
-    <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Include JavaScript Files -->
     <script src="app.js"></script>
 </body>
 </html>
