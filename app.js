@@ -1,4 +1,4 @@
-// Ward 22A Hospital Management System - Final Version
+// Ward 22A Hospital Management System - Complete Updated Version
 // Safdarjung Hospital Burns & Plastic Surgery Department
 // Built for VMMC & Safdarjung Hospital, New Delhi
 
@@ -193,170 +193,75 @@ function updateCredentials() {
 // ===== CLOUD BACKUP FUNCTIONS =====
 
 function cloudSignIn() {
-    if (cloudBackup && window.CloudBackup) {
+    const config = localStorage.getItem('ward22a_cloud_config');
+    
+    if (!config) {
+        const setupChoice = confirm(
+            '☁️ Cloud Backup Setup Required\n\n' +
+            'You need Google API credentials to enable cloud backup.\n\n' +
+            'Click OK for setup, or Cancel to continue without cloud backup.'
+        );
+        
+        if (setupChoice) {
+            showQuickCloudSetup();
+        } else {
+            showToast('Working in local mode only', 'info');
+        }
+        return;
+    }
+    
+    if (!window.CloudBackup) {
+        showToast('⚠️ Cloud backup files not loaded. Working locally.', 'warning');
+        return;
+    }
+    
+    if (cloudBackup) {
         cloudBackup.signIn();
     } else {
-        showToast('⚠️ Cloud backup not configured. Please run setup first.', 'warning');
-        setTimeout(() => {
-            if (window.cloudSetup && typeof cloudSetup.startSetupWizard === 'function') {
-                cloudSetup.startSetupWizard();
+        initializeCloudFeatures().then(() => {
+            if (cloudBackup) {
+                cloudBackup.signIn();
             }
-        }, 1000);
+        });
     }
 }
 
-function cloudSignOut() {
-    if (cloudBackup && window.CloudBackup) {
-        cloudBackup.signOut();
-    } else {
-        showToast('Cloud backup not configured', 'info');
-    }
-}
-
-async function performCloudBackup() {
-    if (!cloudBackup || !window.CloudBackup) {
-        showToast('⚠️ Cloud backup not configured', 'warning');
-        return;
-    }
-    
-    if (!cloudBackup.isSignedIn) {
-        showToast('⚠️ Please sign in to Google Drive first', 'warning');
-        return;
-    }
-    
-    try {
-        // Get encryption password
-        const config = JSON.parse(localStorage.getItem('ward22a_cloud_config') || '{}');
-        let encryptionPassword = config.encryptionPassword;
-        
-        if (!encryptionPassword) {
-            encryptionPassword = prompt('🔐 Enter encryption password for backup:');
-            if (!encryptionPassword) {
-                showToast('Backup cancelled', 'info');
-                return;
-            }
-        }
-        
-        // Show loading state
-        const backupBtn = document.getElementById('cloudBackupBtn');
-        const originalText = backupBtn?.textContent;
-        if (backupBtn) {
-            backupBtn.textContent = '⏳ Creating backup...';
-            backupBtn.disabled = true;
-        }
-        
-        showToast('⏳ Creating encrypted backup...', 'info');
-        
-        // Perform actual backup
-        const result = await cloudBackup.uploadBackup(hms.hospitalData, encryptionPassword);
-        
-        // Reset button
-        if (backupBtn) {
-            backupBtn.textContent = originalText || '☁️ Backup Now';
-            backupBtn.disabled = false;
-        }
-        
-        if (result.success) {
-            showToast(`✅ Backup completed! File: ${result.filename} (${result.size})`, 'success');
-            updateCloudBackupStatus(`Last backup: ${new Date().toLocaleString()}`);
-        } else {
-            showToast('❌ Backup failed: ' + result.error, 'error');
-        }
-    } catch (error) {
-        showToast('❌ Backup error: ' + error.message, 'error');
-        console.error('Cloud backup error:', error);
-        
-        // Reset button on error
-        const backupBtn = document.getElementById('cloudBackupBtn');
-        if (backupBtn) {
-            backupBtn.textContent = '☁️ Backup Now';
-            backupBtn.disabled = false;
-        }
-    }
-}
-
-async function showRestoreOptions() {
-    if (!cloudBackup || !window.CloudBackup) {
-        showToast('⚠️ Cloud backup not configured', 'warning');
-        return;
-    }
-    
-    if (!cloudBackup.isSignedIn) {
-        showToast('⚠️ Please sign in to Google Drive first', 'warning');
-        return;
-    }
-    
-    try {
-        showToast('📥 Loading available backups...', 'info');
-        
-        const backups = await cloudBackup.listBackups();
-        if (!backups.success) {
-            showToast('❌ Failed to list backups: ' + backups.error, 'error');
-            return;
-        }
-        
-        if (backups.backups.length === 0) {
-            showToast('📭 No backups found', 'info');
-            return;
-        }
-        
-        // Show backup selection modal with real data
-        showBackupSelectionModal(backups.backups);
-        
-    } catch (error) {
-        showToast('❌ Error loading backups: ' + error.message, 'error');
-    }
-}
-
-function showBackupSelectionModal(backups) {
+function showQuickCloudSetup() {
     const modal = document.createElement('div');
-    modal.className = 'modal backup-selection-modal';
+    modal.className = 'modal quick-setup-modal';
     modal.innerHTML = `
-        <div class="modal-content large">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3>📥 Restore from Cloud Backup</h3>
+                <h3>☁️ Quick Cloud Setup</h3>
                 <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
             </div>
             <div class="modal-body">
-                <div class="backup-warning">
-                    ⚠️ <strong>Warning:</strong> Restoring will replace all current data. 
-                    <button class="btn btn--sm btn--secondary" onclick="performCloudBackup()">Backup Current Data First</button>
+                <div style="background: #e7f3ff; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                    <h4>🔧 Enable Google Drive Backup</h4>
+                    <p>Enter your Google Cloud credentials to enable encrypted cloud backup:</p>
                 </div>
                 
-                <div class="backup-stats">
-                    <strong>Available Backups:</strong> ${backups.length} | 
-                    <strong>Latest:</strong> ${backups[0]?.created || 'N/A'}
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Google API Key:</label>
+                    <input type="text" id="simpleApiKey" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="AIzaSyC...">
+                    <small style="color: #666; font-size: 0.8rem;">From Google Cloud Console → APIs & Services → Credentials</small>
                 </div>
                 
-                <div class="backup-list">
-                    ${backups.map((backup, index) => `
-                        <div class="backup-item ${index === 0 ? 'latest' : ''}" onclick="selectBackup('${backup.id}', '${backup.name}')">
-                            <div class="backup-info">
-                                <div class="backup-name">
-                                    <strong>${backup.name}</strong>
-                                    ${index === 0 ? '<span class="badge success">Latest</span>' : ''}
-                                </div>
-                                <div class="backup-details">
-                                    📅 Created: ${backup.created}<br>
-                                    📊 Size: ${backup.size}<br>
-                                    📝 ${backup.description}
-                                </div>
-                            </div>
-                            <div class="backup-actions">
-                                <button class="btn btn--primary btn--sm">Restore</button>
-                                <button class="btn btn--danger btn--sm" onclick="event.stopPropagation(); deleteBackup('${backup.id}', '${backup.name}')">Delete</button>
-                            </div>
-                        </div>
-                    `).join('')}
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">OAuth Client ID:</label>
+                    <input type="text" id="simpleClientId" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="xxx.apps.googleusercontent.com">
+                    <small style="color: #666; font-size: 0.8rem;">OAuth 2.0 Client ID from Google Cloud Console</small>
                 </div>
                 
-                <div class="backup-tips">
-                    <h5>💡 Tips:</h5>
-                    <ul>
-                        <li>Always backup current data before restoring</li>
-                        <li>Use the latest backup unless you need older data</li>
-                        <li>You'll need the encryption password used when creating the backup</li>
-                    </ul>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Encryption Password:</label>
+                    <input type="password" id="simplePassword" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="Strong password for encryption">
+                    <small style="color: #666; font-size: 0.8rem;">This encrypts your data before cloud storage</small>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="btn btn--secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button class="btn btn--primary" onclick="saveSimpleSetup()">Save Configuration</button>
                 </div>
             </div>
         </div>
@@ -365,82 +270,44 @@ function showBackupSelectionModal(backups) {
     document.body.appendChild(modal);
 }
 
-async function selectBackup(backupId, backupName) {
-    if (!confirm(`⚠️ Restore from backup "${backupName}"?\n\nThis will replace ALL current data!`)) {
+function saveSimpleSetup() {
+    const apiKey = document.getElementById('simpleApiKey').value.trim();
+    const clientId = document.getElementById('simpleClientId').value.trim();
+    const password = document.getElementById('simplePassword').value;
+    
+    if (!apiKey || !clientId || !password) {
+        alert('⚠️ Please fill in all fields');
         return;
     }
     
-    // Get encryption password
-    const config = JSON.parse(localStorage.getItem('ward22a_cloud_config') || '{}');
-    let encryptionPassword = config.encryptionPassword;
-    
-    if (!encryptionPassword) {
-        encryptionPassword = prompt('🔐 Enter encryption password for this backup:');
-        if (!encryptionPassword) {
-            showToast('Restore cancelled', 'info');
-            return;
-        }
+    if (password.length < 6) {
+        alert('⚠️ Password should be at least 6 characters');
+        return;
     }
     
-    try {
-        showToast('⏳ Restoring backup...', 'info');
-        
-        const result = await cloudBackup.downloadBackup(backupId, encryptionPassword);
-        if (result.success) {
-            // Verify data structure
-            if (!result.data.hospitalData) {
-                throw new Error('Invalid backup format');
-            }
-            
-            // Replace current data
-            hms.hospitalData = result.data.hospitalData;
-            hms.saveDataToStorage();
-            
-            // Refresh UI completely
-            hms.renderBeds();
-            hms.updateDashboardStats();
-            hms.renderRegisterContent(hms.currentRegister);
-            hms.updateSystemInfo();
-            
-            showToast('✅ Backup restored successfully!', 'success');
-            
-            // Close modal
-            document.querySelector('.backup-selection-modal')?.remove();
-            
-            // Show restore info
-            if (result.data.metadata) {
-                const meta = result.data.metadata;
-                console.log('📋 Restored backup metadata:', meta);
-                showToast(`Restored data from ${meta.exportDate ? new Date(meta.exportDate).toLocaleString() : 'unknown date'}`, 'info');
-            }
-            
-        } else {
-            showToast('❌ Restore failed: ' + result.error, 'error');
-        }
-    } catch (error) {
-        showToast('❌ Restore error: ' + error.message, 'error');
-        console.error('Restore error:', error);
-    }
+    // Save configuration
+    const config = {
+        apiKey: apiKey,
+        clientId: clientId,
+        encryptionPassword: password,
+        autoSync: true,
+        dailyBackup: true,
+        setupDate: new Date().toISOString()
+    };
+    
+    localStorage.setItem('ward22a_cloud_config', JSON.stringify(config));
+    
+    // Close modal
+    document.querySelector('.quick-setup-modal').remove();
+    
+    showToast('✅ Cloud backup configured!', 'success');
 }
 
-async function deleteBackup(backupId, backupName) {
-    if (!confirm(`🗑️ Permanently delete backup "${backupName}"?\n\nThis action cannot be undone!`)) {
-        return;
-    }
-    
-    try {
-        const result = await cloudBackup.deleteBackup(backupId);
-        if (result.success) {
-            showToast('🗑️ Backup deleted successfully', 'success');
-            
-            // Refresh backup list
-            document.querySelector('.backup-selection-modal')?.remove();
-            setTimeout(() => showRestoreOptions(), 500);
-        } else {
-            showToast('❌ Delete failed: ' + result.error, 'error');
-        }
-    } catch (error) {
-        showToast('❌ Delete error: ' + error.message, 'error');
+function cloudSignOut() {
+    if (cloudBackup && window.CloudBackup) {
+        cloudBackup.signOut();
+    } else {
+        showToast('Cloud backup not configured', 'info');
     }
 }
 
@@ -474,6 +341,32 @@ function updateCloudBackupStatus(message) {
     }
 }
 
+// NEW: Show on-leave patients modal
+function showOnLeavePatients() {
+    if (hms) {
+        hms.showOnLeavePatients();
+    }
+}
+
+// NEW: Dressing functions
+function showDressingForm() {
+    if (hms) {
+        hms.showDressingForm();
+    }
+}
+
+function closeDressingModal() {
+    if (hms) {
+        hms.closeDressingModal();
+    }
+}
+
+function loadDressingRecords() {
+    if (hms) {
+        hms.loadDressingRecords();
+    }
+}
+
 // ===== HMS CLASS =====
 
 class HospitalManagementSystem {
@@ -489,17 +382,16 @@ class HospitalManagementSystem {
         this.currentMode = null;
         this.currentRegister = 0;
         
+        // Updated: 32 beds without gender separation
         this.wardConfig = {
             totalBeds: 32,
-            maleBeds: [],
-            femaleBeds: [],
+            beds: [],
             units: [1, 2, 3, 4, 5, 6]
         };
         
-        // Generate bed IDs
-        for (let i = 1; i <= 16; i++) {
-            this.wardConfig.maleBeds.push('M' + String(i).padStart(2, '0'));
-            this.wardConfig.femaleBeds.push('F' + String(i).padStart(2, '0'));
+        // Generate bed IDs (B01 to B32)
+        for (let i = 1; i <= 32; i++) {
+            this.wardConfig.beds.push('B' + String(i).padStart(2, '0'));
         }
         
         this.hospitalData = {
@@ -557,14 +449,17 @@ class HospitalManagementSystem {
                     fatherName: 'Suresh Kumar',
                     age: 32,
                     sex: 'Male',
+                    phoneNo: '9876543210',
                     mrd: '4235',
                     uhid: '789012',
                     unit: 1,
-                    bedNo: 'M01',
+                    bedNo: 'B01',
                     address: 'Karol Bagh, New Delhi-110005',
                     diagnosis: '30% Chemical burn',
                     mlcStatus: 'MLC',
-                    admissionDateTime: '2025-09-04T10:30',
+                    admissionDate: '2025-09-04',
+                    admissionTime: '10:30',
+                    transferTime: '14:00',
                     transferFrom: 'BOPD/Casualty',
                     status: 'active',
                     onLeave: false,
@@ -576,14 +471,17 @@ class HospitalManagementSystem {
                     fatherName: 'Ram Singh',
                     age: 29,
                     sex: 'Female',
+                    phoneNo: '9123456789',
                     mrd: '25432',
                     uhid: '890123',
                     unit: 6,
-                    bedNo: 'F03',
+                    bedNo: 'B15',
                     address: 'Rohini, Sector 15, New Delhi-110085',
                     diagnosis: '20% DTB',
                     mlcStatus: 'NMLC',
-                    admissionDateTime: '2025-09-05T14:15',
+                    admissionDate: '2025-09-05',
+                    admissionTime: '14:15',
+                    transferTime: '16:30',
                     transferFrom: 'Ward 23A',
                     status: 'active',
                     onLeave: false,
@@ -595,6 +493,7 @@ class HospitalManagementSystem {
                     fatherName: 'Ravi Singh',
                     age: 45,
                     sex: 'Male',
+                    phoneNo: '9988776655',
                     mrd: '345678',
                     uhid: '901234',
                     unit: 5,
@@ -602,7 +501,9 @@ class HospitalManagementSystem {
                     address: 'Lajpat Nagar, New Delhi-110024',
                     diagnosis: 'Electrical burn both hands',
                     mlcStatus: 'MLC',
-                    admissionDateTime: '2025-09-06T08:45',
+                    admissionDate: '2025-09-06',
+                    admissionTime: '08:45',
+                    transferTime: '10:00',
                     transferFrom: 'BICU',
                     status: 'active',
                     onLeave: true,
@@ -610,6 +511,11 @@ class HospitalManagementSystem {
                     lastModified: new Date().toISOString()
                 }
             ];
+        }
+        
+        // Initialize dressing records if empty
+        if (!this.hospitalData.dressingRecords) {
+            this.hospitalData.dressingRecords = [];
         }
     }
     
@@ -620,7 +526,7 @@ class HospitalManagementSystem {
         
         container.innerHTML = '';
         
-        [...this.wardConfig.maleBeds, ...this.wardConfig.femaleBeds].forEach(bedId => {
+        this.wardConfig.beds.forEach(bedId => {
             const bedElement = this.createBedElement(bedId);
             container.appendChild(bedElement);
         });
@@ -677,20 +583,36 @@ class HospitalManagementSystem {
                     <p><strong>Father's Name:</strong> ${patient.fatherName}</p>
                     <p><strong>Age:</strong> ${patient.age} years</p>
                     <p><strong>Sex:</strong> ${patient.sex}</p>
+                    <p><strong>Phone:</strong> ${patient.phoneNo || 'N/A'}</p>
                     <p><strong>MRD:</strong> ${patient.mrd}</p>
                     <p><strong>UHID:</strong> ${patient.uhid}</p>
                     <p><strong>Unit:</strong> ${patient.unit}</p>
                     <p><strong>Diagnosis:</strong> ${patient.diagnosis}</p>
                     <p><strong>MLC Status:</strong> <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></p>
-                    <p><strong>Admission:</strong> ${new Date(patient.admissionDateTime).toLocaleString()}</p>
+                    <p><strong>Admission:</strong> ${patient.admissionDate} at ${patient.admissionTime}</p>
                     ${patient.onLeave ? '<p><strong>Status:</strong> <span style="color: orange; font-weight: bold;">On Leave</span></p>' : ''}
+                    
+                    ${this.currentMode === 'admin' ? `
+                        <div class="patient-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
+                            <h5>Patient Actions:</h5>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button class="btn btn--sm btn--warning" onclick="hms.sendOnLeave('${patient.id}')">Send on Leave</button>
+                                <button class="btn btn--sm btn--info" onclick="hms.transferPatient('${patient.id}')">Transfer</button>
+                                <button class="btn btn--sm btn--success" onclick="hms.dischargePatient('${patient.id}')">Discharge</button>
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         } else {
             body.innerHTML = `
                 <div class="empty-bed-modal">
                     <p>Bed ${bedId} is currently vacant.</p>
-                    ${this.currentMode === 'admin' ? `<button class="btn btn--primary" onclick="hms.showAdmissionForm('${bedId}')">Add Patient to This Bed</button>` : ''}
+                    ${this.currentMode === 'admin' ? `
+                        <div class="bed-actions" style="margin-top: 1rem;">
+                            <button class="btn btn--primary" onclick="hms.showAdmissionForm('${bedId}')">Add Patient to This Bed</button>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
@@ -701,6 +623,88 @@ class HospitalManagementSystem {
     closeBedModal() {
         const modal = document.getElementById('bedModal');
         if (modal) modal.classList.add('hidden');
+    }
+    
+    // NEW: Patient Action Functions
+    sendOnLeave(patientId) {
+        const patient = this.hospitalData.patients.find(p => p.id === patientId);
+        if (!patient) return;
+        
+        if (confirm(`Send ${patient.patientName} on leave?`)) {
+            patient.onLeave = true;
+            patient.leaveDate = new Date().toISOString().split('T')[0];
+            patient.bedNo = null; // Free up the bed
+            this.saveDataToStorage();
+            this.renderBeds();
+            this.updateDashboardStats();
+            this.closeBedModal();
+            this.showToast(`${patient.patientName} sent on leave`, 'success');
+        }
+    }
+    
+    transferPatient(patientId) {
+        const patient = this.hospitalData.patients.find(p => p.id === patientId);
+        if (!patient) return;
+        
+        const transferTo = prompt(`Transfer ${patient.patientName} to which ward/department?`);
+        if (!transferTo) return;
+        
+        if (confirm(`Transfer ${patient.patientName} to ${transferTo}?`)) {
+            patient.status = 'transferred';
+            patient.transferredTo = transferTo;
+            patient.transferDate = new Date().toISOString();
+            
+            // Move to transferred patients
+            this.hospitalData.transferredPatients.push(patient);
+            this.hospitalData.patients = this.hospitalData.patients.filter(p => p.id !== patientId);
+            
+            this.saveDataToStorage();
+            this.renderBeds();
+            this.updateDashboardStats();
+            this.closeBedModal();
+            this.showToast(`${patient.patientName} transferred to ${transferTo}`, 'success');
+        }
+    }
+    
+    dischargePatient(patientId) {
+        const patient = this.hospitalData.patients.find(p => p.id === patientId);
+        if (!patient) return;
+        
+        const dischargeType = prompt(
+            `Discharge type for ${patient.patientName}:\n\n` +
+            '1. LAMA (Leave Against Medical Advice)\n' +
+            '2. DOR (Discharge on Request)\n' +
+            '3. Death\n' +
+            '4. Other\n\n' +
+            'Enter option number or type custom discharge type:'
+        );
+        
+        if (!dischargeType) return;
+        
+        let finalDischargeType;
+        switch(dischargeType) {
+            case '1': finalDischargeType = 'LAMA'; break;
+            case '2': finalDischargeType = 'DOR'; break;
+            case '3': finalDischargeType = 'Death'; break;
+            case '4': finalDischargeType = prompt('Enter custom discharge type:') || 'Other'; break;
+            default: finalDischargeType = dischargeType;
+        }
+        
+        if (confirm(`Discharge ${patient.patientName} as ${finalDischargeType}?`)) {
+            patient.status = 'discharged';
+            patient.dischargeType = finalDischargeType;
+            patient.dischargeDateTime = new Date().toISOString();
+            
+            // Move to discharged patients
+            this.hospitalData.dischargedPatients.push(patient);
+            this.hospitalData.patients = this.hospitalData.patients.filter(p => p.id !== patientId);
+            
+            this.saveDataToStorage();
+            this.renderBeds();
+            this.updateDashboardStats();
+            this.closeBedModal();
+            this.showToast(`${patient.patientName} discharged as ${finalDischargeType}`, 'success');
+        }
     }
     
     updateDashboardStats() {
@@ -714,6 +718,55 @@ class HospitalManagementSystem {
         this.setElementText('availableBeds', availableBeds);
         this.setElementText('onLeavePatients', onLeavePatients);
         this.setElementText('mlcCases', mlcCases);
+        
+        // Make on-leave stat clickable
+        const onLeaveEl = document.getElementById('onLeavePatients');
+        if (onLeaveEl && onLeaveEl.parentElement) {
+            onLeaveEl.parentElement.style.cursor = 'pointer';
+            onLeaveEl.parentElement.onclick = () => this.showOnLeavePatients();
+            onLeaveEl.parentElement.title = 'Click to view on-leave patients';
+        }
+    }
+    
+    // NEW: Show on-leave patients modal
+    showOnLeavePatients() {
+        const onLeavePatients = this.hospitalData.patients.filter(p => p.onLeave);
+        
+        if (onLeavePatients.length === 0) {
+            this.showToast('No patients currently on leave', 'info');
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal on-leave-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>👥 Patients on Leave (${onLeavePatients.length})</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="on-leave-list">
+                        ${onLeavePatients.map(patient => `
+                            <div class="patient-card">
+                                <div class="patient-header">
+                                    <strong>${patient.patientName}</strong> (${patient.age}${patient.sex.charAt(0)})
+                                    <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span>
+                                </div>
+                                <div class="patient-details">
+                                    <p><strong>MRD:</strong> ${patient.mrd} | <strong>Unit:</strong> ${patient.unit}</p>
+                                    <p><strong>Diagnosis:</strong> ${patient.diagnosis}</p>
+                                    <p><strong>Leave Date:</strong> ${patient.leaveDate}</p>
+                                    <p><strong>Phone:</strong> ${patient.phoneNo || 'N/A'}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     }
     
     // Patient List Modal
@@ -747,9 +800,8 @@ class HospitalManagementSystem {
         tbody.innerHTML = '';
         
         const activePatients = this.hospitalData.patients.filter(p => p.status === 'active');
-        const allBeds = [...this.wardConfig.maleBeds, ...this.wardConfig.femaleBeds];
         
-        allBeds.forEach((bedId, index) => {
+        this.wardConfig.beds.forEach((bedId, index) => {
             const patient = activePatients.find(p => p.bedNo === bedId);
             const row = tbody.insertRow();
             row.innerHTML = `
@@ -762,13 +814,9 @@ class HospitalManagementSystem {
                 <td>${patient ? patient.diagnosis : ''}</td>
             `;
             
-            if (patient) {
-                if (patient.onLeave) {
-                    row.style.backgroundColor = '#fff3cd';
-                    row.style.fontStyle = 'italic';
-                }
-            } else {
-                row.classList.add('empty-row');
+            if (patient && patient.onLeave) {
+                row.style.backgroundColor = '#fff3cd';
+                row.style.fontStyle = 'italic';
             }
         });
     }
@@ -821,15 +869,8 @@ class HospitalManagementSystem {
         `;
         
         for (let i = 1; i <= 32; i++) {
-            let bedId, patient;
-            
-            if (i <= 16) {
-                bedId = 'M' + String(i).padStart(2, '0');
-            } else {
-                bedId = 'F' + String(i - 16).padStart(2, '0');
-            }
-            
-            patient = activePatients.find(p => p.bedNo === bedId);
+            const bedId = 'B' + String(i).padStart(2, '0');
+            const patient = activePatients.find(p => p.bedNo === bedId);
             
             let rowClass = '';
             if (patient && patient.onLeave) {
@@ -908,6 +949,9 @@ class HospitalManagementSystem {
             case 5:
                 this.renderDataManagement();
                 break;
+            case 6: // NEW: Dressing register
+                this.renderDressingRegister();
+                break;
             default:
                 break;
         }
@@ -926,6 +970,7 @@ class HospitalManagementSystem {
                 <td>${patient.fatherName}</td>
                 <td>${patient.age}</td>
                 <td>${patient.sex}</td>
+                <td>${patient.phoneNo || 'N/A'}</td>
                 <td>${patient.mrd}</td>
                 <td>${patient.uhid}</td>
                 <td>${patient.unit}</td>
@@ -933,7 +978,7 @@ class HospitalManagementSystem {
                 <td>${patient.address}</td>
                 <td>${patient.diagnosis}</td>
                 <td><span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></td>
-                <td>${new Date(patient.admissionDateTime).toLocaleString()}</td>
+                <td>${patient.admissionDate} ${patient.admissionTime}</td>
                 <td>${patient.transferFrom}</td>
                 <td>
                     ${this.currentMode === 'admin' ? `
@@ -966,7 +1011,7 @@ class HospitalManagementSystem {
                 <td>${patient.unit}</td>
                 <td>${patient.diagnosis}</td>
                 <td><span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></td>
-                <td>${new Date(patient.admissionDateTime).toLocaleString()}</td>
+                <td>${patient.admissionDate}</td>
                 <td>${new Date(patient.dischargeDateTime).toLocaleString()}</td>
                 <td><span class="badge info">${patient.dischargeType}</span></td>
                 <td>
@@ -978,30 +1023,101 @@ class HospitalManagementSystem {
         });
     }
     
+    // NEW: Updated Treatment Register with inline tags
     renderTreatmentRegister() {
         const container = document.getElementById('currentPatientsList');
         if (!container) return;
         
         container.innerHTML = '<h3>Current Patients in Ward 22A</h3>';
         
-        this.hospitalData.patients.forEach(patient => {
-            const patientDiv = document.createElement('div');
-            patientDiv.className = 'patient-card';
-            patientDiv.innerHTML = `
-                <div class="patient-header">
-                    <div>
-                        <strong>${patient.bedNo || 'On Leave'}</strong> - ${patient.patientName} (${patient.age}${patient.sex.charAt(0)}) - Unit ${patient.unit}
-                        <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span>
-                        ${patient.onLeave ? '<span class="badge" style="background: orange;">ON LEAVE</span>' : ''}
-                    </div>
-                </div>
-                <div class="patient-details">
-                    <p><strong>Diagnosis:</strong> ${patient.diagnosis}</p>
-                    <p><strong>Status:</strong> ${patient.onLeave ? 'On Leave' : 'In Ward'}</p>
+        const activePatients = this.hospitalData.patients.filter(p => p.status === 'active');
+        
+        if (activePatients.length === 0) {
+            container.innerHTML += '<p>No active patients currently in the ward.</p>';
+            return;
+        }
+        
+        // Create inline patient tags
+        const patientsContainer = document.createElement('div');
+        patientsContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;';
+        
+        activePatients.forEach(patient => {
+            const patientTag = document.createElement('div');
+            patientTag.className = 'patient-tag';
+            patientTag.style.cssText = `
+                background: ${patient.onLeave ? '#fff3cd' : '#e7f3ff'};
+                border: 1px solid ${patient.onLeave ? '#ffeaa7' : '#b3d7ff'};
+                border-radius: 20px;
+                padding: 0.5rem 1rem;
+                margin: 0.25rem;
+                font-size: 0.9rem;
+                cursor: pointer;
+                transition: all 0.3s;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+            `;
+            
+            patientTag.innerHTML = `
+                <div>
+                    <strong>${patient.bedNo || 'On Leave'}</strong> - ${patient.patientName} 
+                    <span style="color: #666;">(${patient.age}${patient.sex.charAt(0)})</span>
+                    <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}" style="font-size: 0.7rem; margin-left: 0.5rem;">${patient.mlcStatus}</span>
+                    ${patient.onLeave ? '<span style="color: orange; font-weight: bold; margin-left: 0.5rem;">ON LEAVE</span>' : ''}
                 </div>
             `;
-            container.appendChild(patientDiv);
+            
+            patientTag.onclick = () => {
+                this.showPatientDetails(patient);
+            };
+            
+            patientTag.onmouseover = () => {
+                patientTag.style.transform = 'scale(1.05)';
+                patientTag.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+            };
+            
+            patientTag.onmouseout = () => {
+                patientTag.style.transform = 'scale(1)';
+                patientTag.style.boxShadow = 'none';
+            };
+            
+            patientsContainer.appendChild(patientTag);
         });
+        
+        container.appendChild(patientsContainer);
+    }
+    
+    showPatientDetails(patient) {
+        const modal = document.createElement('div');
+        modal.className = 'modal patient-details-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>👤 ${patient.patientName} - Details</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="patient-detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div><strong>Bed:</strong> ${patient.bedNo || 'On Leave'}</div>
+                        <div><strong>Age/Sex:</strong> ${patient.age} years / ${patient.sex}</div>
+                        <div><strong>Phone:</strong> ${patient.phoneNo || 'N/A'}</div>
+                        <div><strong>MRD:</strong> ${patient.mrd}</div>
+                        <div><strong>UHID:</strong> ${patient.uhid}</div>
+                        <div><strong>Unit:</strong> ${patient.unit}</div>
+                        <div><strong>MLC:</strong> <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></div>
+                        <div><strong>Status:</strong> ${patient.onLeave ? '<span style="color: orange;">On Leave</span>' : '<span style="color: green;">In Ward</span>'}</div>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <strong>Diagnosis:</strong> ${patient.diagnosis}
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <strong>Address:</strong> ${patient.address}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
     }
     
     renderDailyCensus() {
@@ -1012,6 +1128,245 @@ class HospitalManagementSystem {
     renderDataManagement() {
         // Update system info when data management is rendered
         this.updateSystemInfo();
+    }
+    
+    // NEW: Dressing Register
+    renderDressingRegister() {
+        const container = document.getElementById('dressingContainer');
+        if (!container) return;
+        
+        container.innerHTML = `
+            <div class="dressing-controls">
+                <label for="dressingDate">Select Date:</label>
+                <input type="date" id="dressingDate" class="form-control" onchange="loadDressingRecords()" value="${new Date().toISOString().split('T')[0]}">
+                ${this.currentMode === 'admin' ? '<button class="btn btn--primary" onclick="showDressingForm()">Add Dressing Record</button>' : ''}
+            </div>
+            <div id="dressingRecords" class="dressing-records" style="margin-top: 1rem;">
+                <p>Select a date to view dressing records</p>
+            </div>
+        `;
+        
+        // Load today's records by default
+        this.loadDressingRecords();
+    }
+    
+    loadDressingRecords() {
+        const selectedDate = document.getElementById('dressingDate').value;
+        const container = document.getElementById('dressingRecords');
+        
+        if (!selectedDate || !container) return;
+        
+        const records = this.hospitalData.dressingRecords.filter(record => 
+            record.date === selectedDate
+        );
+        
+        if (records.length === 0) {
+            container.innerHTML = `<p>No dressing records found for ${new Date(selectedDate).toLocaleDateString()}</p>`;
+            return;
+        }
+        
+        container.innerHTML = `
+            <h4>Dressing Records - ${new Date(selectedDate).toLocaleDateString()}</h4>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Bed No.</th>
+                            <th>Patient Name</th>
+                            <th>Age</th>
+                            <th>Sex</th>
+                            <th>MRD</th>
+                            <th>Unit</th>
+                            <th>Dressing Material</th>
+                            <th>Dresser</th>
+                            <th>Shown To</th>
+                            <th>Sample</th>
+                            ${this.currentMode === 'admin' ? '<th>Actions</th>' : ''}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${records.map(record => `
+                            <tr>
+                                <td>${record.bedNo}</td>
+                                <td>${record.patientName}</td>
+                                <td>${record.age}</td>
+                                <td>${record.sex}</td>
+                                <td>${record.mrd}</td>
+                                <td>${record.unit}</td>
+                                <td>${record.dressingMaterial}</td>
+                                <td>${record.dresser}</td>
+                                <td>${record.shownTo || '-'}</td>
+                                <td>${record.sample || '-'}</td>
+                                ${this.currentMode === 'admin' ? `
+                                    <td>
+                                        <button class="delete-btn" onclick="hms.deleteDressingRecord('${record.id}')" title="Delete">×</button>
+                                    </td>
+                                ` : ''}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    showDressingForm() {
+        const modal = document.createElement('div');
+        modal.className = 'modal dressing-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>➕ Add Dressing Record</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="dressingForm" class="dressing-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date:</label>
+                                <input type="date" name="date" class="form-control" value="${new Date().toISOString().split('T')[0]}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Bed No:</label>
+                                <select name="bedNo" class="form-control" required onchange="hms.updatePatientInfo(this)">
+                                    <option value="">Select Bed</option>
+                                    ${this.wardConfig.beds.map(bedId => {
+                                        const patient = this.hospitalData.patients.find(p => p.bedNo === bedId && p.status === 'active');
+                                        return `<option value="${bedId}" ${patient ? `data-patient='${JSON.stringify(patient)}'` : ''}>${bedId}${patient ? ` - ${patient.patientName}` : ' (Vacant)'}</option>`;
+                                    }).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Patient Name:</label>
+                                <input type="text" name="patientName" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Age:</label>
+                                <input type="number" name="age" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sex:</label>
+                                <input type="text" name="sex" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>MRD:</label>
+                                <input type="text" name="mrd" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Unit:</label>
+                                <input type="number" name="unit" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Dressing Material:</label>
+                                <input type="text" name="dressingMaterial" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Dresser:</label>
+                                <input type="text" name="dresser" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Shown To (Optional):</label>
+                                <input type="text" name="shownTo" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Sample (Optional):</label>
+                            <input type="text" name="sample" class="form-control">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn--secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Save Dressing Record</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Setup form submission
+        document.getElementById('dressingForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addDressingRecord();
+        });
+    }
+    
+    updatePatientInfo(bedSelect) {
+        const selectedOption = bedSelect.options[bedSelect.selectedIndex];
+        const patientData = selectedOption.getAttribute('data-patient');
+        
+        const form = bedSelect.closest('form');
+        if (!form) return;
+        
+        if (patientData) {
+            const patient = JSON.parse(patientData);
+            form.patientName.value = patient.patientName;
+            form.age.value = patient.age;
+            form.sex.value = patient.sex;
+            form.mrd.value = patient.mrd;
+            form.unit.value = patient.unit;
+        } else {
+            form.patientName.value = '';
+            form.age.value = '';
+            form.sex.value = '';
+            form.mrd.value = '';
+            form.unit.value = '';
+        }
+    }
+    
+    addDressingRecord() {
+        const form = document.getElementById('dressingForm');
+        const formData = new FormData(form);
+        const recordData = {};
+        
+        for (let [key, value] of formData.entries()) {
+            recordData[key] = value;
+        }
+        
+        recordData.id = 'DR' + Date.now();
+        recordData.createdAt = new Date().toISOString();
+        
+        this.hospitalData.dressingRecords.push(recordData);
+        this.saveDataToStorage();
+        
+        // Close modal
+        document.querySelector('.dressing-modal').remove();
+        
+        // Reload records
+        this.loadDressingRecords();
+        
+        this.showToast('Dressing record added successfully', 'success');
+    }
+    
+    deleteDressingRecord(recordId) {
+        const password = prompt('⚠️ DELETE DRESSING RECORD\n\nEnter security password:');
+        
+        if (password !== this.credentials.security_password) {
+            if (password !== null) {
+                this.showToast('❌ Invalid security password', 'error');
+            }
+            return;
+        }
+        
+        if (confirm('Delete this dressing record?')) {
+            this.hospitalData.dressingRecords = this.hospitalData.dressingRecords.filter(r => r.id !== recordId);
+            this.saveDataToStorage();
+            this.loadDressingRecords();
+            this.showToast('Dressing record deleted', 'success');
+        }
+    }
+    
+    closeDressingModal() {
+        const modal = document.querySelector('.dressing-modal');
+        if (modal) modal.remove();
     }
     
     generateCensusReport() {
@@ -1073,7 +1428,7 @@ class HospitalManagementSystem {
             .filter(p => p.status === 'active' && !p.onLeave && p.bedNo)
             .map(p => p.bedNo);
         
-        [...this.wardConfig.maleBeds, ...this.wardConfig.femaleBeds].forEach(bedId => {
+        this.wardConfig.beds.forEach(bedId => {
             if (!occupiedBeds.includes(bedId)) {
                 const option = document.createElement('option');
                 option.value = bedId;
@@ -1117,7 +1472,6 @@ class HospitalManagementSystem {
         }
         
         patientData.id = 'W22A' + String(Date.now()).substr(-6);
-        patientData.admissionDateTime = new Date().toISOString();
         patientData.status = 'active';
         patientData.lastModified = new Date().toISOString();
         
@@ -1546,96 +1900,36 @@ function showToast(message, type = 'info') {
     }
 }
 
-// Add CSS for backup modal and improved styling
+// Add CSS for improved styling
 document.addEventListener('DOMContentLoaded', () => {
-    const additionalCSS = `
+    const improvedCSS = `
         <style>
-        /* Backup Modal Styles */
-        .backup-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin: 1rem 0;
-        }
-
-        .backup-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .backup-item:hover {
-            background: #f8f9fa;
-            border-color: #007bff;
-        }
-
-        .backup-item.latest {
-            border-color: #28a745;
-            background: rgba(40, 167, 69, 0.05);
-        }
-
-        .backup-info {
-            flex: 1;
-        }
-
-        .backup-name {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .backup-details {
-            font-size: 0.9rem;
-            color: #666;
-            line-height: 1.4;
-        }
-
-        .backup-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .backup-warning {
-            background: #fff3cd;
-            color: #856404;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            border: 1px solid #ffeaa7;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .backup-stats {
-            background: #f8f9fa;
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-
-        .backup-tips {
-            background: #e7f3ff;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-top: 1rem;
-        }
-
-        .backup-tips ul {
-            margin: 0.5rem 0;
-            padding-left: 1.5rem;
-        }
-
-        .backup-tips li {
-            margin-bottom: 0.5rem;
+        /* Updated bed colors - subtle light green for occupied */
+        .bed-box.occupied {
+            border-color: #90EE90;
+            background: rgba(144, 238, 144, 0.3);
         }
         
-        /* Patient Card Styles */
+        .bed-box.occupied:hover {
+            background: rgba(144, 238, 144, 0.5);
+        }
+        
+        /* Patient tags for treatment register */
+        .patient-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        /* On-leave modal styles */
+        .on-leave-modal .modal-content {
+            max-width: 800px;
+        }
+        
+        .on-leave-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
         .patient-card {
             background: white;
             border: 1px solid #e9ecef;
@@ -1655,6 +1949,28 @@ document.addEventListener('DOMContentLoaded', () => {
         .patient-details p {
             margin: 0.25rem 0;
             font-size: 0.9rem;
+        }
+        
+        /* Dressing form styles */
+        .dressing-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .dressing-form .form-group.full-width {
+            grid-column: span 2;
+        }
+        
+        .dressing-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 6px;
         }
         
         /* Census Report Styles */
@@ -1691,8 +2007,8 @@ document.addEventListener('DOMContentLoaded', () => {
             font-weight: bold;
             color: #007bff;
         }
-
-        /* Improved Toast Styles */
+        
+        /* Toast improvements */
         .toast {
             background: #333;
             color: white;
@@ -1708,48 +2024,35 @@ document.addEventListener('DOMContentLoaded', () => {
             animation: slideInRight 0.3s ease;
         }
         
-        .toast.success {
-            background: #28a745;
-        }
+        .toast.success { background: #28a745; }
+        .toast.error { background: #dc3545; }
+        .toast.warning { background: #ffc107; color: #212529; }
+        .toast.info { background: #17a2b8; }
         
-        .toast.error {
-            background: #dc3545;
-        }
-        
-        .toast.warning {
-            background: #ffc107;
-            color: #212529;
-        }
-        
-        .toast.info {
-            background: #17a2b8;
-        }
-
         @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
         
-        /* Mobile Responsiveness */
+        /* Number input styling */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* Mobile responsiveness */
         @media (max-width: 768px) {
-            .backup-item {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 1rem;
-            }
-            
-            .backup-actions {
-                justify-content: center;
-            }
-            
-            .census-grid {
+            .dressing-form .form-row {
                 grid-template-columns: 1fr;
+            }
+            
+            .dressing-form .form-group.full-width {
+                grid-column: span 1;
             }
             
             .patient-header {
@@ -1757,16 +2060,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 align-items: flex-start;
                 gap: 0.5rem;
             }
+            
+            .patient-tag {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .census-grid {
+                grid-template-columns: 1fr;
+            }
         }
         </style>
     `;
     
-    document.head.insertAdjacentHTML('beforeend', additionalCSS);
+    document.head.insertAdjacentHTML('beforeend', improvedCSS);
     
-    console.log('🏥 Ward 22A HMS - Final Version Loading...');
-    console.log('📅 Current Date:', new Date().toLocaleString());
+    console.log('🏥 Ward 22A HMS - Updated Version Loading...');
     console.log('🔐 Login: ward22a / zxcv123');
     console.log('🔒 Security Password: Chetan@123');
+    console.log('🛏️ 32 universal beds (B01-B32)');
+    console.log('✨ Features: On-leave click, dressing records, treatment tags, discharge options');
     
     // HMS will be initialized when mode is selected
 });
