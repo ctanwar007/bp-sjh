@@ -1,2085 +1,1929 @@
-// Ward 22A Hospital Management System - Complete Updated Version
-// Safdarjung Hospital Burns & Plastic Surgery Department
-// Built for VMMC & Safdarjung Hospital, New Delhi
+:root {
+  /* Primitive Color Tokens */
+  --color-white: rgba(255, 255, 255, 1);
+  --color-black: rgba(0, 0, 0, 1);
+  --color-cream-50: rgba(252, 252, 249, 1);
+  --color-cream-100: rgba(255, 255, 253, 1);
+  --color-gray-200: rgba(245, 245, 245, 1);
+  --color-gray-300: rgba(167, 169, 169, 1);
+  --color-gray-400: rgba(119, 124, 124, 1);
+  --color-slate-500: rgba(98, 108, 113, 1);
+  --color-brown-600: rgba(94, 82, 64, 1);
+  --color-charcoal-700: rgba(31, 33, 33, 1);
+  --color-charcoal-800: rgba(38, 40, 40, 1);
+  --color-slate-900: rgba(19, 52, 59, 1);
+  --color-teal-300: rgba(50, 184, 198, 1);
+  --color-teal-400: rgba(45, 166, 178, 1);
+  --color-teal-500: rgba(33, 128, 141, 1);
+  --color-teal-600: rgba(29, 116, 128, 1);
+  --color-teal-700: rgba(26, 104, 115, 1);
+  --color-teal-800: rgba(41, 150, 161, 1);
+  --color-red-400: rgba(255, 84, 89, 1);
+  --color-red-500: rgba(192, 21, 47, 1);
+  --color-orange-400: rgba(230, 129, 97, 1);
+  --color-orange-500: rgba(168, 75, 47, 1);
 
-let hms = null;
-let cloudBackup = null;
-let syncManager = null;
-let versionControl = null;
+  /* RGB versions for opacity control */
+  --color-brown-600-rgb: 94, 82, 64;
+  --color-teal-500-rgb: 33, 128, 141;
+  --color-slate-900-rgb: 19, 52, 59;
+  --color-slate-500-rgb: 98, 108, 113;
+  --color-red-500-rgb: 192, 21, 47;
+  --color-red-400-rgb: 255, 84, 89;
+  --color-orange-500-rgb: 168, 75, 47;
+  --color-orange-400-rgb: 230, 129, 97;
 
-// ===== GLOBAL FUNCTIONS (Called from HTML) =====
+  /* Background color tokens (Light Mode) */
+  --color-bg-1: rgba(59, 130, 246, 0.08); /* Light blue */
+  --color-bg-2: rgba(245, 158, 11, 0.08); /* Light yellow */
+  --color-bg-3: rgba(34, 197, 94, 0.08); /* Light green */
+  --color-bg-4: rgba(239, 68, 68, 0.08); /* Light red */
+  --color-bg-5: rgba(147, 51, 234, 0.08); /* Light purple */
+  --color-bg-6: rgba(249, 115, 22, 0.08); /* Light orange */
+  --color-bg-7: rgba(236, 72, 153, 0.08); /* Light pink */
+  --color-bg-8: rgba(6, 182, 212, 0.08); /* Light cyan */
 
-function selectMode(mode) {
-    console.log('Mode selected:', mode);
+  /* Semantic Color Tokens (Light Mode) */
+  --color-background: var(--color-cream-50);
+  --color-surface: var(--color-cream-100);
+  --color-text: var(--color-slate-900);
+  --color-text-secondary: var(--color-slate-500);
+  --color-primary: var(--color-teal-500);
+  --color-primary-hover: var(--color-teal-600);
+  --color-primary-active: var(--color-teal-700);
+  --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
+  --color-secondary-active: rgba(var(--color-brown-600-rgb), 0.25);
+  --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+  --color-btn-primary-text: var(--color-cream-50);
+  --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-card-border-inner: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-error: var(--color-red-500);
+  --color-success: var(--color-teal-500);
+  --color-warning: var(--color-orange-500);
+  --color-info: var(--color-slate-500);
+  --color-focus-ring: rgba(var(--color-teal-500-rgb), 0.4);
+  --color-select-caret: rgba(var(--color-slate-900-rgb), 0.8);
+
+  /* Common style patterns */
+  --focus-ring: 0 0 0 3px var(--color-focus-ring);
+  --focus-outline: 2px solid var(--color-primary);
+  --status-bg-opacity: 0.15;
+  --status-border-opacity: 0.25;
+  --select-caret-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23134252' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  --select-caret-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+
+  /* RGB versions for opacity control */
+  --color-success-rgb: 33, 128, 141;
+  --color-error-rgb: 192, 21, 47;
+  --color-warning-rgb: 168, 75, 47;
+  --color-info-rgb: 98, 108, 113;
+
+  /* Typography */
+  --font-family-base: "FKGroteskNeue", "Geist", "Inter", -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono: "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, monospace;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+  --font-size-4xl: 30px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 550;
+  --font-weight-bold: 600;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --letter-spacing-tight: -0.01em;
+
+  /* Spacing */
+  --space-0: 0;
+  --space-1: 1px;
+  --space-2: 2px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-32: 32px;
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-base: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04),
+    0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04),
+    0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+
+  /* Animation */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+}
+
+/* Dark mode colors */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* RGB versions for opacity control (Dark Mode) */
+    --color-gray-400-rgb: 119, 124, 124;
+    --color-teal-300-rgb: 50, 184, 198;
+    --color-gray-300-rgb: 167, 169, 169;
+    --color-gray-200-rgb: 245, 245, 245;
+
+    /* Background color tokens (Dark Mode) */
+    --color-bg-1: rgba(29, 78, 216, 0.15); /* Dark blue */
+    --color-bg-2: rgba(180, 83, 9, 0.15); /* Dark yellow */
+    --color-bg-3: rgba(21, 128, 61, 0.15); /* Dark green */
+    --color-bg-4: rgba(185, 28, 28, 0.15); /* Dark red */
+    --color-bg-5: rgba(107, 33, 168, 0.15); /* Dark purple */
+    --color-bg-6: rgba(194, 65, 12, 0.15); /* Dark orange */
+    --color-bg-7: rgba(190, 24, 93, 0.15); /* Dark pink */
+    --color-bg-8: rgba(8, 145, 178, 0.15); /* Dark cyan */
     
-    const modeSelection = document.getElementById('modeSelection');
-    const loginScreen = document.getElementById('loginScreen');
-    const mainApp = document.getElementById('mainApp');
-    
-    // Hide all screens
-    modeSelection.classList.add('hidden');
-    loginScreen.classList.add('hidden');
-    mainApp.classList.add('hidden');
-    
-    if (mode === 'view') {
-        // View mode - skip login
-        mainApp.classList.remove('hidden');
-        updateModeDisplay('view');
-        initializeHMS();
-    } else if (mode === 'admin') {
-        // Admin mode - show login
-        loginScreen.classList.remove('hidden');
+    /* Semantic Color Tokens (Dark Mode) */
+    --color-background: var(--color-charcoal-700);
+    --color-surface: var(--color-charcoal-800);
+    --color-text: var(--color-gray-200);
+    --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
+    --color-primary: var(--color-teal-300);
+    --color-primary-hover: var(--color-teal-400);
+    --color-primary-active: var(--color-teal-800);
+    --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
+    --color-secondary-hover: rgba(var(--color-gray-400-rgb), 0.25);
+    --color-secondary-active: rgba(var(--color-gray-400-rgb), 0.3);
+    --color-border: rgba(var(--color-gray-400-rgb), 0.3);
+    --color-error: var(--color-red-400);
+    --color-success: var(--color-teal-300);
+    --color-warning: var(--color-orange-400);
+    --color-info: var(--color-gray-300);
+    --color-focus-ring: rgba(var(--color-teal-300-rgb), 0.4);
+    --color-btn-primary-text: var(--color-slate-900);
+    --color-card-border: rgba(var(--color-gray-400-rgb), 0.2);
+    --color-card-border-inner: rgba(var(--color-gray-400-rgb), 0.15);
+    --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+    --button-border-secondary: rgba(var(--color-gray-400-rgb), 0.2);
+    --color-border-secondary: rgba(var(--color-gray-400-rgb), 0.2);
+    --color-select-caret: rgba(var(--color-gray-200-rgb), 0.8);
+
+    /* Common style patterns - updated for dark mode */
+    --focus-ring: 0 0 0 3px var(--color-focus-ring);
+    --focus-outline: 2px solid var(--color-primary);
+    --status-bg-opacity: 0.15;
+    --status-border-opacity: 0.25;
+    --select-caret-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23134252' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    --select-caret-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+
+    /* RGB versions for dark mode */
+    --color-success-rgb: var(--color-teal-300-rgb);
+    --color-error-rgb: var(--color-red-400-rgb);
+    --color-warning-rgb: var(--color-orange-400-rgb);
+    --color-info-rgb: var(--color-gray-300-rgb);
+  }
+}
+
+/* Data attribute for manual theme switching */
+[data-color-scheme="dark"] {
+  /* RGB versions for opacity control (dark mode) */
+  --color-gray-400-rgb: 119, 124, 124;
+  --color-teal-300-rgb: 50, 184, 198;
+  --color-gray-300-rgb: 167, 169, 169;
+  --color-gray-200-rgb: 245, 245, 245;
+
+  /* Colorful background palette - Dark Mode */
+  --color-bg-1: rgba(29, 78, 216, 0.15); /* Dark blue */
+  --color-bg-2: rgba(180, 83, 9, 0.15); /* Dark yellow */
+  --color-bg-3: rgba(21, 128, 61, 0.15); /* Dark green */
+  --color-bg-4: rgba(185, 28, 28, 0.15); /* Dark red */
+  --color-bg-5: rgba(107, 33, 168, 0.15); /* Dark purple */
+  --color-bg-6: rgba(194, 65, 12, 0.15); /* Dark orange */
+  --color-bg-7: rgba(190, 24, 93, 0.15); /* Dark pink */
+  --color-bg-8: rgba(8, 145, 178, 0.15); /* Dark cyan */
+  
+  /* Semantic Color Tokens (Dark Mode) */
+  --color-background: var(--color-charcoal-700);
+  --color-surface: var(--color-charcoal-800);
+  --color-text: var(--color-gray-200);
+  --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
+  --color-primary: var(--color-teal-300);
+  --color-primary-hover: var(--color-teal-400);
+  --color-primary-active: var(--color-teal-800);
+  --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
+  --color-secondary-hover: rgba(var(--color-gray-400-rgb), 0.25);
+  --color-secondary-active: rgba(var(--color-gray-400-rgb), 0.3);
+  --color-border: rgba(var(--color-gray-400-rgb), 0.3);
+  --color-error: var(--color-red-400);
+  --color-success: var(--color-teal-300);
+  --color-warning: var(--color-orange-400);
+  --color-info: var(--color-gray-300);
+  --color-focus-ring: rgba(var(--color-teal-300-rgb), 0.4);
+  --color-btn-primary-text: var(--color-slate-900);
+  --color-card-border: rgba(var(--color-gray-400-rgb), 0.15);
+  --color-card-border-inner: rgba(var(--color-gray-400-rgb), 0.15);
+  --shadow-inset-sm: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+  --color-border-secondary: rgba(var(--color-gray-400-rgb), 0.2);
+  --color-select-caret: rgba(var(--color-gray-200-rgb), 0.8);
+
+  /* Common style patterns - updated for dark mode */
+  --focus-ring: 0 0 0 3px var(--color-focus-ring);
+  --focus-outline: 2px solid var(--color-primary);
+  --status-bg-opacity: 0.15;
+  --status-border-opacity: 0.25;
+  --select-caret-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23134252' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  --select-caret-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+
+  /* RGB versions for dark mode */
+  --color-success-rgb: var(--color-teal-300-rgb);
+  --color-error-rgb: var(--color-red-400-rgb);
+  --color-warning-rgb: var(--color-orange-400-rgb);
+  --color-info-rgb: var(--color-gray-300-rgb);
+}
+
+[data-color-scheme="light"] {
+  /* RGB versions for opacity control (light mode) */
+  --color-brown-600-rgb: 94, 82, 64;
+  --color-teal-500-rgb: 33, 128, 141;
+  --color-slate-900-rgb: 19, 52, 59;
+  
+  /* Semantic Color Tokens (Light Mode) */
+  --color-background: var(--color-cream-50);
+  --color-surface: var(--color-cream-100);
+  --color-text: var(--color-slate-900);
+  --color-text-secondary: var(--color-slate-500);
+  --color-primary: var(--color-teal-500);
+  --color-primary-hover: var(--color-teal-600);
+  --color-primary-active: var(--color-teal-700);
+  --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
+  --color-secondary-active: rgba(var(--color-brown-600-rgb), 0.25);
+  --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+  --color-btn-primary-text: var(--color-cream-50);
+  --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-card-border-inner: rgba(var(--color-brown-600-rgb), 0.12);
+  --color-error: var(--color-red-500);
+  --color-success: var(--color-teal-500);
+  --color-warning: var(--color-orange-500);
+  --color-info: var(--color-slate-500);
+  --color-focus-ring: rgba(var(--color-teal-500-rgb), 0.4);
+
+  /* RGB versions for light mode */
+  --color-success-rgb: var(--color-teal-500-rgb);
+  --color-error-rgb: var(--color-red-500-rgb);
+  --color-warning-rgb: var(--color-orange-500-rgb);
+  --color-info-rgb: var(--color-slate-500-rgb);
+}
+
+/* Base styles */
+html {
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h1 {
+  font-size: var(--font-size-4xl);
+}
+h2 {
+  font-size: var(--font-size-3xl);
+}
+h3 {
+  font-size: var(--font-size-2xl);
+}
+h4 {
+  font-size: var(--font-size-xl);
+}
+h5 {
+  font-size: var(--font-size-lg);
+}
+h6 {
+  font-size: var(--font-size-md);
+}
+
+p {
+  margin: 0 0 var(--space-16) 0;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+code,
+pre {
+  font-family: var(--font-family-mono);
+  font-size: calc(var(--font-size-base) * 0.95);
+  background-color: var(--color-secondary);
+  border-radius: var(--radius-sm);
+}
+
+code {
+  padding: var(--space-1) var(--space-4);
+}
+
+pre {
+  padding: var(--space-16);
+  margin: var(--space-16) 0;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-16);
+  border-radius: var(--radius-base);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-standard);
+  border: none;
+  text-decoration: none;
+  position: relative;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+}
+
+.btn--primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn--primary:active {
+  background: var(--color-primary-active);
+}
+
+.btn--secondary {
+  background: var(--color-secondary);
+  color: var(--color-text);
+}
+
+.btn--secondary:hover {
+  background: var(--color-secondary-hover);
+}
+
+.btn--secondary:active {
+  background: var(--color-secondary-active);
+}
+
+.btn--outline {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.btn--outline:hover {
+  background: var(--color-secondary);
+}
+
+.btn--sm {
+  padding: var(--space-4) var(--space-12);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+}
+
+.btn--lg {
+  padding: var(--space-10) var(--space-20);
+  font-size: var(--font-size-lg);
+  border-radius: var(--radius-md);
+}
+
+.btn--full-width {
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form elements */
+.form-control {
+  display: block;
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+textarea.form-control {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+}
+
+select.form-control {
+  padding: var(--space-8) var(--space-12);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: var(--select-caret-light);
+  background-repeat: no-repeat;
+  background-position: right var(--space-12) center;
+  background-size: 16px;
+  padding-right: var(--space-32);
+}
+
+/* Add a dark mode specific caret */
+@media (prefers-color-scheme: dark) {
+  select.form-control {
+    background-image: var(--select-caret-dark);
+  }
+}
+
+/* Also handle data-color-scheme */
+[data-color-scheme="dark"] select.form-control {
+  background-image: var(--select-caret-dark);
+}
+
+[data-color-scheme="light"] select.form-control {
+  background-image: var(--select-caret-light);
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  outline: var(--focus-outline);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--space-8);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+}
+
+.form-group {
+  margin-bottom: var(--space-16);
+}
+
+/* Card component */
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow var(--duration-normal) var(--ease-standard);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card__body {
+  padding: var(--space-16);
+}
+
+.card__header,
+.card__footer {
+  padding: var(--space-16);
+  border-bottom: 1px solid var(--color-card-border-inner);
+}
+
+/* Status indicators - simplified with CSS variables */
+.status {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-6) var(--space-12);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+}
+
+.status--success {
+  background-color: rgba(
+    var(--color-success-rgb, 33, 128, 141),
+    var(--status-bg-opacity)
+  );
+  color: var(--color-success);
+  border: 1px solid
+    rgba(var(--color-success-rgb, 33, 128, 141), var(--status-border-opacity));
+}
+
+.status--error {
+  background-color: rgba(
+    var(--color-error-rgb, 192, 21, 47),
+    var(--status-bg-opacity)
+  );
+  color: var(--color-error);
+  border: 1px solid
+    rgba(var(--color-error-rgb, 192, 21, 47), var(--status-border-opacity));
+}
+
+.status--warning {
+  background-color: rgba(
+    var(--color-warning-rgb, 168, 75, 47),
+    var(--status-bg-opacity)
+  );
+  color: var(--color-warning);
+  border: 1px solid
+    rgba(var(--color-warning-rgb, 168, 75, 47), var(--status-border-opacity));
+}
+
+.status--info {
+  background-color: rgba(
+    var(--color-info-rgb, 98, 108, 113),
+    var(--status-bg-opacity)
+  );
+  color: var(--color-info);
+  border: 1px solid
+    rgba(var(--color-info-rgb, 98, 108, 113), var(--status-border-opacity));
+}
+
+/* Container layout */
+.container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: var(--space-16);
+  padding-left: var(--space-16);
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: var(--container-sm);
+  }
+}
+@media (min-width: 768px) {
+  .container {
+    max-width: var(--container-md);
+  }
+}
+@media (min-width: 1024px) {
+  .container {
+    max-width: var(--container-lg);
+  }
+}
+@media (min-width: 1280px) {
+  .container {
+    max-width: var(--container-xl);
+  }
+}
+
+/* Utility classes */
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.gap-4 {
+  gap: var(--space-4);
+}
+.gap-8 {
+  gap: var(--space-8);
+}
+.gap-16 {
+  gap: var(--space-16);
+}
+
+.m-0 {
+  margin: 0;
+}
+.mt-8 {
+  margin-top: var(--space-8);
+}
+.mb-8 {
+  margin-bottom: var(--space-8);
+}
+.mx-8 {
+  margin-left: var(--space-8);
+  margin-right: var(--space-8);
+}
+.my-8 {
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-8);
+}
+
+.p-0 {
+  padding: 0;
+}
+.py-8 {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+}
+.px-8 {
+  padding-left: var(--space-8);
+  padding-right: var(--space-8);
+}
+.py-16 {
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-16);
+}
+.px-16 {
+  padding-left: var(--space-16);
+  padding-right: var(--space-16);
+}
+
+.block {
+  display: block;
+}
+.hidden {
+  display: none;
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+
+/* Dark mode specifics */
+[data-color-scheme="dark"] .btn--outline {
+  border: 1px solid var(--color-border-secondary);
+}
+
+@font-face {
+  font-family: 'FKGroteskNeue';
+  src: url('https://r2cdn.perplexity.ai/fonts/FKGroteskNeue.woff2')
+    format('woff2');
+}
+
+/* END PERPLEXITY DESIGN SYSTEM */
+/* ===== GLOBAL STYLES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family-base);
+    background: var(--color-background);
+    min-height: 100vh;
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    max-width: var(--container-xl);
+    margin: 0 auto;
+    padding: var(--space-20);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ===== CARD STYLES ===== */
+.card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-32);
+    margin-bottom: var(--space-32);
+    border: 1px solid var(--color-card-border);
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: var(--space-32);
+}
+
+.card-header h1 {
+    color: var(--color-text);
+    margin-bottom: var(--space-8);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-tight);
+}
+
+.card-header p {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xl);
+}
+
+/* ===== BUTTON STYLES ===== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-12) var(--space-24);
+    border: none;
+    border-radius: var(--radius-base);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-standard);
+    text-decoration: none;
+    text-align: center;
+    margin: var(--space-4);
+    line-height: var(--line-height-normal);
+}
+
+.btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+.btn--primary {
+    background: var(--color-primary);
+    color: var(--color-btn-primary-text);
+}
+
+.btn--primary:hover {
+    background: var(--color-primary-hover);
+    transform: translateY(-2px);
+}
+
+.btn--secondary {
+    background: var(--color-secondary);
+    color: var(--color-text);
+}
+
+.btn--secondary:hover {
+    background: var(--color-secondary-hover);
+}
+
+.btn--success {
+    background: var(--color-success);
+    color: var(--color-btn-primary-text);
+}
+
+.btn--success:hover {
+    background: var(--color-primary-hover);
+}
+
+.btn--warning {
+    background: var(--color-warning);
+    color: var(--color-btn-primary-text);
+}
+
+.btn--warning:hover {
+    background: var(--color-orange-500);
+}
+
+.btn--danger {
+    background: var(--color-error);
+    color: var(--color-btn-primary-text);
+}
+
+.btn--danger:hover {
+    background: var(--color-red-500);
+}
+
+.btn--info {
+    background: var(--color-info);
+    color: var(--color-btn-primary-text);
+}
+
+.btn--info:hover {
+    background: var(--color-slate-500);
+}
+
+.btn--sm {
+    padding: var(--space-6) var(--space-12);
+    font-size: var(--font-size-sm);
+    border-radius: var(--radius-sm);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== MODE SELECTION STYLES ===== */
+.mode-selection {
+    display: flex;
+    gap: var(--space-32);
+    justify-content: center;
+    margin-top: var(--space-32);
+}
+
+.mode-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-32);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-standard);
+    box-shadow: var(--shadow-sm);
+    min-width: 250px;
+    border: 1px solid var(--color-card-border);
+}
+
+.mode-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+}
+
+.mode-card.admin {
+    border-left: 5px solid var(--color-error);
+}
+
+.mode-card.view {
+    border-left: 5px solid var(--color-success);
+}
+
+.mode-icon {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--space-16);
+}
+
+.mode-card h3 {
+    margin-bottom: var(--space-16);
+    color: var(--color-text);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* ===== LOGIN STYLES ===== */
+.login-form {
+    max-width: 400px;
+    margin: 0 auto;
+    background: var(--color-surface);
+    padding: var(--space-32);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-card-border);
+}
+
+.form-group {
+    margin-bottom: var(--space-24);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-8);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--space-8) var(--space-12);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    transition: border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.form-control:focus {
+    outline: var(--focus-outline);
+    border-color: var(--color-primary);
+}
+
+.error-message {
+    background: rgba(var(--color-error-rgb), var(--status-bg-opacity));
+    color: var(--color-error);
+    border: 1px solid rgba(var(--color-error-rgb), var(--status-border-opacity));
+    padding: var(--space-10);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-16);
+    text-align: center;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-sm);
+}
+
+/* ===== MAIN APP STYLES ===== */
+.main-header {
+    background: var(--color-surface);
+    padding: var(--space-16) var(--space-32);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-32);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-card-border);
+}
+
+.hospital-info h1 {
+    color: var(--color-text);
+    margin-bottom: var(--space-8);
+    font-weight: var(--font-weight-semibold);
+}
+
+.hospital-info p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-4);
+}
+
+.mode-badge {
+    padding: var(--space-8) var(--space-16);
+    border-radius: var(--radius-full);
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-sm);
+}
+
+.mode-badge.admin {
+    background: var(--color-error);
+    color: var(--color-btn-primary-text);
+}
+
+.mode-badge.view {
+    background: var(--color-success);
+    color: var(--color-btn-primary-text);
+}
+
+/* ===== NAVIGATION STYLES ===== */
+.navigation {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-16);
+    margin-bottom: var(--space-32);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-card-border);
+}
+
+.nav-buttons {
+    display: flex;
+    gap: var(--space-8);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-btn {
+    padding: var(--space-12) var(--space-20);
+    background: var(--color-secondary);
+    color: var(--color-text);
+    border: none;
+    border-radius: var(--radius-base);
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-standard);
+    font-weight: var(--font-weight-semibold);
+}
+
+.nav-btn:hover {
+    background: var(--color-secondary-hover);
+}
+
+.nav-btn.active {
+    background: var(--color-primary);
+    color: var(--color-btn-primary-text);
+}
+
+/* ===== DASHBOARD STYLES ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-24);
+    margin-bottom: var(--space-32);
+}
+
+.stat-card {
+    background: var(--color-surface);
+    padding: var(--space-24);
+    border-radius: var(--radius-md);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--duration-normal) var(--ease-standard);
+    border: 1px solid var(--color-card-border);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    display: block;
+}
+
+.stat-label {
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-semibold);
+    margin-top: var(--space-8);
+}
+
+/* ===== BED GRID STYLES ===== */
+.beds-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-16);
+    margin-bottom: var(--space-32);
+}
+
+.bed-box {
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-16);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-standard);
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.bed-box:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.bed-box.vacant {
+    border-color: var(--color-border);
+    background: var(--color-surface);
+}
+
+.bed-box.occupied {
+    border-color: var(--color-success);
+    background: rgba(var(--color-success-rgb), 0.1);
+}
+
+.bed-box.occupied:hover {
+    background: rgba(var(--color-success-rgb), 0.2);
+}
+
+.bed-box.onleave {
+    border-color: var(--color-warning);
+    background: rgba(var(--color-warning-rgb), 0.1);
+}
+
+.bed-number {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--space-8);
+    color: var(--color-text);
+}
+
+.bed-patient {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+/* ===== TABLE STYLES ===== */
+.table-container {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-32);
+    border: 1px solid var(--color-card-border);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background: var(--color-text);
+    color: var(--color-surface);
+    padding: var(--space-16) var(--space-12);
+    text-align: left;
+    font-weight: var(--font-weight-semibold);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.data-table td {
+    padding: var(--space-12);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tr:nth-child(even) {
+    background: var(--color-secondary);
+}
+
+.data-table tr:hover {
+    background: rgba(var(--color-primary-rgb, 33, 128, 141), 0.1);
+}
+
+/* ===== MODAL STYLES ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(var(--color-slate-900-rgb), 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    max-width: 600px;
+    max-height: 90vh;
+    width: 90%;
+    overflow-y: auto;
+    border: 1px solid var(--color-card-border);
+}
+
+.modal-content.large {
+    max-width: 900px;
+}
+
+.modal-header {
+    padding: var(--space-24);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    color: var(--color-text);
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-2xl);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-close:hover {
+    color: var(--color-error);
+}
+
+.modal-body {
+    padding: var(--space-24);
+}
+
+/* ===== FORM STYLES ===== */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    margin-bottom: var(--space-16);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--space-16);
+    justify-content: flex-end;
+    margin-top: var(--space-32);
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--color-border);
+}
+
+/* ===== BADGE STYLES ===== */
+.badge {
+    padding: var(--space-6) var(--space-12);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+.badge.success {
+    background: rgba(var(--color-success-rgb), var(--status-bg-opacity));
+    color: var(--color-success);
+    border: 1px solid rgba(var(--color-success-rgb), var(--status-border-opacity));
+}
+
+.badge.danger {
+    background: rgba(var(--color-error-rgb), var(--status-bg-opacity));
+    color: var(--color-error);
+    border: 1px solid rgba(var(--color-error-rgb), var(--status-border-opacity));
+}
+
+.badge.info {
+    background: rgba(var(--color-info-rgb), var(--status-bg-opacity));
+    color: var(--color-info);
+    border: 1px solid rgba(var(--color-info-rgb), var(--status-border-opacity));
+}
+
+/* ===== DELETE BUTTON ===== */
+.delete-btn {
+    background: var(--color-error);
+    color: var(--color-btn-primary-text);
+    border: none;
+    border-radius: var(--radius-full);
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-base);
+    margin-left: var(--space-8);
+}
+
+.delete-btn:hover {
+    background: var(--color-red-500);
+}
+
+/* ===== EDIT BUTTON ===== */
+.edit-btn {
+    background: var(--color-warning);
+    color: var(--color-btn-primary-text);
+    border: none;
+    border-radius: var(--radius-sm);
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-sm);
+    margin-right: var(--space-8);
+}
+
+.edit-btn:hover {
+    background: var(--color-orange-500);
+}
+
+/* ===== TOAST STYLES ===== */
+#toastContainer {
+    position: fixed;
+    top: var(--space-20);
+    right: var(--space-20);
+    z-index: 10000;
+}
+
+.toast {
+    background: var(--color-charcoal-800);
+    color: var(--color-gray-200);
+    padding: var(--space-16);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-8);
+    max-width: 400px;
+    box-shadow: var(--shadow-lg);
+    animation: slideInRight var(--duration-normal) var(--ease-standard);
+}
+
+.toast.success { background: var(--color-success); color: var(--color-btn-primary-text); }
+.toast.error { background: var(--color-error); color: var(--color-btn-primary-text); }
+.toast.warning { background: var(--color-warning); color: var(--color-btn-primary-text); }
+.toast.info { background: var(--color-info); color: var(--color-btn-primary-text); }
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== LOADING INDICATOR ===== */
+.loading-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(var(--color-slate-900-rgb), 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    background: var(--color-surface);
+    padding: var(--space-32);
+    border-radius: var(--radius-md);
+    text-align: center;
+    border: 1px solid var(--color-card-border);
+}
+
+.spinner {
+    border: 4px solid var(--color-border);
+    border-top: 4px solid var(--color-primary);
+    border-radius: var(--radius-full);
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto var(--space-16);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== PATIENT TAG STYLES ===== */
+.patient-tag {
+    background: var(--color-bg-1);
+    border: 1px solid rgba(var(--color-primary-rgb, 33, 128, 141), 0.3);
+    border-radius: var(--radius-full);
+    padding: var(--space-8) var(--space-16);
+    margin: var(--space-4);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-standard);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.patient-tag:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== TREATMENT STYLES ===== */
+.treatment-section {
+    background: var(--color-secondary);
+    padding: var(--space-16);
+    border-radius: var(--radius-base);
+    margin-top: var(--space-16);
+}
+
+.treatment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--space-16);
+    background: var(--color-surface);
+    border-radius: var(--radius-base);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-card-border);
+}
+
+.treatment-table th {
+    background: var(--color-primary);
+    color: var(--color-btn-primary-text);
+    padding: var(--space-12);
+    text-align: left;
+    font-weight: var(--font-weight-semibold);
+}
+
+.treatment-table td {
+    padding: var(--space-12);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.treatment-table tr:nth-child(even) {
+    background: var(--color-secondary);
+}
+
+.treatment-table tr:hover {
+    background: rgba(var(--color-primary-rgb, 33, 128, 141), 0.1);
+}
+
+.treatment-actions {
+    display: flex;
+    gap: var(--space-8);
+    align-items: center;
+}
+
+.no-treatments {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: var(--space-32);
+    font-style: italic;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .container {
+        padding: var(--space-10);
+    }
+
+    .mode-selection {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .main-header {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-16);
+    }
+
+    .nav-buttons {
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .beds-container {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: var(--space-8);
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: var(--space-20);
+    }
+
+    .data-table {
+        font-size: var(--font-size-sm);
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: var(--space-8) var(--space-6);
+    }
+
+    .treatment-table {
+        font-size: var(--font-size-sm);
+    }
+
+    .treatment-table th,
+    .treatment-table td {
+        padding: var(--space-8) var(--space-6);
     }
 }
 
-function backToModeSelection() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('modeSelection').classList.remove('hidden');
-}
-
-function attemptLogin() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const errorDiv = document.getElementById('loginError');
-    
-    // Final credentials
-    const defaultUser = 'ward22a';
-    const defaultPass = 'zxcv123';
-    
-    if (username === defaultUser && password === defaultPass) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        updateModeDisplay('admin');
-        initializeHMS();
-    } else {
-        errorDiv.textContent = 'Invalid username or password';
-        errorDiv.classList.remove('hidden');
+/* ===== MOBILE PORTRAIT RESPONSIVE BREAKPOINT ===== */
+@media (max-width: 480px) {
+    .container {
+        padding: var(--space-8);
     }
-}
 
-function logout() {
-    document.getElementById('mainApp').classList.add('hidden');
-    document.getElementById('modeSelection').classList.remove('hidden');
-    // Clear login form
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    const errorDiv = document.getElementById('loginError');
-    if (errorDiv) errorDiv.classList.add('hidden');
-}
+    .card {
+        padding: var(--space-16);
+        margin-bottom: var(--space-16);
+    }
 
-function showRegister(num) {
-    // Hide all register contents
-    const registerContents = document.querySelectorAll('.register-content');
-    registerContents.forEach(el => el.classList.remove('active'));
-    
-    // Show selected register
-    const selectedRegister = document.getElementById('register-' + num);
-    if (selectedRegister) {
-        selectedRegister.classList.add('active');
+    .card-header h1 {
+        font-size: var(--font-size-2xl);
     }
-    
-    // Update navigation
-    const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(btn => btn.classList.remove('active'));
-    
-    const activeButton = document.querySelector('[data-register="' + num + '"]');
-    if (activeButton) {
-        activeButton.classList.add('active');
-    }
-    
-    // Render content for specific registers
-    if (hms) {
-        hms.renderRegisterContent(num);
-    }
-}
 
-function saveData() {
-    if (hms) {
-        hms.saveData();
+    .mode-selection {
+        gap: var(--space-16);
     }
-}
 
-function showAdmissionForm() {
-    if (hms) {
-        hms.showAdmissionForm();
+    .mode-card {
+        min-width: 200px;
+        padding: var(--space-20);
     }
-}
 
-function closeAdmissionModal() {
-    if (hms) {
-        hms.closeAdmissionModal();
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-12);
     }
-}
 
-function closeBedModal() {
-    if (hms) {
-        hms.closeBedModal();
+    .beds-container {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: var(--space-6);
     }
-}
 
-function showPatientListModal() {
-    if (hms) {
-        hms.showPatientListModal();
+    .bed-box {
+        padding: var(--space-8);
+        min-height: 80px;
     }
-}
 
-function closePatientListModal() {
-    if (hms) {
-        hms.closePatientListModal();
+    .bed-number {
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--space-4);
+    }
+
+    .bed-patient {
+        font-size: var(--font-size-xs);
+    }
+
+    .nav-buttons {
+        gap: var(--space-4);
+    }
+
+    .nav-btn {
+        padding: var(--space-8) var(--space-12);
+        font-size: var(--font-size-sm);
+    }
+
+    .btn {
+        padding: var(--space-8) var(--space-16);
+        font-size: var(--font-size-sm);
+    }
+
+    .data-table,
+    .treatment-table {
+        font-size: var(--font-size-xs);
+    }
+
+    .data-table th,
+    .data-table td,
+    .treatment-table th,
+    .treatment-table td {
+        padding: var(--space-6) var(--space-4);
+    }
+
+    .modal-content {
+        width: 98%;
+        margin: var(--space-10);
+    }
+
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .form-actions .btn {
+        margin: var(--space-2) 0;
     }
 }
 
-function printPatientList() {
-    if (hms) {
-        hms.printPatientList();
+/* ===== REGISTER CONTENT ===== */
+.register-content {
+    display: none;
+}
+
+.register-content.active {
+    display: block;
+}
+
+/* ===== DRESSING CONTROLS ===== */
+.dressing-controls {
+    display: flex;
+    gap: var(--space-16);
+    align-items: center;
+    margin-bottom: var(--space-16);
+    padding: var(--space-16);
+    background: var(--color-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.dressing-controls label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+}
+
+/* ===== CENSUS REPORT ===== */
+.census-report {
+    background: var(--color-surface);
+    padding: var(--space-24);
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-card-border);
+}
+
+.census-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-16);
+    margin-top: var(--space-16);
+}
+
+.census-item {
+    background: var(--color-secondary);
+    padding: var(--space-16);
+    border-radius: var(--radius-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.census-item label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+}
+
+.census-item span {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+}
+
+/* ===== CLOUD BACKUP SECTION ===== */
+.cloud-backup-section {
+    background: var(--color-secondary);
+    padding: var(--space-24);
+    border-radius: var(--radius-base);
+    margin-bottom: var(--space-16);
+}
+
+.sync-status {
+    display: inline-block;
+    padding: var(--space-8) var(--space-16);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    margin-left: var(--space-16);
+}
+
+.sync-status.success {
+    background: rgba(var(--color-success-rgb), var(--status-bg-opacity));
+    color: var(--color-success);
+    border: 1px solid rgba(var(--color-success-rgb), var(--status-border-opacity));
+}
+
+/* ===== SYSTEM INFO ===== */
+.system-info {
+    background: var(--color-secondary);
+    padding: var(--space-16);
+    border-radius: var(--radius-sm);
+    margin-top: var(--space-16);
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-16);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-8);
+}
+
+.info-item strong {
+    color: var(--color-text);
+}
+
+/* ===== ON-LEAVE MODAL STYLES ===== */
+.on-leave-modal .modal-content {
+    max-width: 800px;
+}
+
+.on-leave-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.patient-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-base);
+    padding: var(--space-16);
+    margin-bottom: var(--space-16);
+    box-shadow: var(--shadow-sm);
+}
+
+.patient-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-8);
+}
+
+.patient-details p {
+    margin: var(--space-4) 0;
+    font-size: var(--font-size-sm);
+}
+
+/* ===== DRESSING FORM STYLES ===== */
+.dressing-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    margin-bottom: var(--space-16);
+}
+
+.dressing-form .form-group.full-width {
+    grid-column: span 2;
+}
+
+/* ===== EDIT FORM STYLES ===== */
+.edit-form {
+    background: var(--color-secondary);
+    padding: var(--space-16);
+    border-radius: var(--radius-base);
+    margin-top: var(--space-16);
+}
+
+.edit-form .form-row {
+    margin-bottom: var(--space-12);
+}
+
+.edit-form .form-group {
+    margin-bottom: var(--space-12);
+}
+
+/* ===== PATIENT DETAILS MODAL ===== */
+.patient-details-modal .modal-content {
+    max-width: 700px;
+}
+
+.patient-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-16);
+    margin-bottom: var(--space-16);
+}
+
+.patient-detail-grid > div {
+    padding: var(--space-8);
+    background: var(--color-secondary);
+    border-radius: var(--radius-sm);
+}
+
+/* ===== NUMBER INPUT STYLING ===== */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ===== COMPACT TABLE FOR MOBILE ===== */
+@media (max-width: 768px) {
+    .dressing-form .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .dressing-form .form-group.full-width {
+        grid-column: span 1;
+    }
+    
+    .patient-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-8);
+    }
+    
+    .patient-tag {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .census-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .treatment-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-4);
+    }
+
+    .treatment-actions .btn {
+        margin: 0;
+        width: 100%;
+        text-align: center;
     }
 }
 
-function downloadPatientList() {
-    if (hms) {
-        hms.downloadPatientList();
+/* ===== PRINT OPTIMIZATIONS ===== */
+@media print {
+    body {
+        font-size: var(--font-size-xs);
+        margin: 0;
+        padding: 0;
+        background: var(--color-white);
+        color: var(--color-black);
+    }
+
+    .modal, .hidden {
+        display: none !important;
+    }
+
+    .print-optimized {
+        page-break-inside: avoid;
+        font-size: var(--font-size-xs);
+    }
+
+    .print-optimized table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--font-size-xs);
+        margin: 0;
+    }
+
+    .print-optimized th,
+    .print-optimized td {
+        padding: 3px 2px;
+        border: 1px solid var(--color-black);
+        font-size: var(--font-size-xs);
+        line-height: var(--line-height-tight);
+    }
+
+    .print-optimized th {
+        background: var(--color-black) !important;
+        color: var(--color-white) !important;
+        font-weight: var(--font-weight-bold);
+    }
+
+    @page {
+        margin: 0.5in;
+        size: A4;
     }
 }
 
-function exportData() {
-    if (hms) {
-        hms.exportData();
-    }
-}
+/* ===== ADDITIONAL UTILITY CLASSES ===== */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
 
-function exportRegister(num) {
-    if (hms) {
-        hms.exportRegister(num);
-    }
-}
+.mt-1 { margin-top: var(--space-8); }
+.mt-2 { margin-top: var(--space-16); }
+.mt-3 { margin-top: var(--space-24); }
 
-function generateCensusReport() {
-    if (hms) {
-        hms.generateCensusReport();
-    }
-}
+.mb-1 { margin-bottom: var(--space-8); }
+.mb-2 { margin-bottom: var(--space-16); }
+.mb-3 { margin-bottom: var(--space-24); }
 
-function deleteEntry(type, id) {
-    if (hms) {
-        hms.deleteEntry(type, id);
-    }
-}
+.p-1 { padding: var(--space-8); }
+.p-2 { padding: var(--space-16); }
+.p-3 { padding: var(--space-24); }
 
-function toggleOtherTransfer(select) {
-    const otherGroup = document.getElementById('otherTransferGroup');
-    if (otherGroup) {
-        otherGroup.style.display = select.value === 'Other' ? 'block' : 'none';
-    }
-}
+.border { border: 1px solid var(--color-border); }
+.border-radius { border-radius: var(--radius-sm); }
 
-function changeLoginCredentials() {
-    if (hms) {
-        hms.changeLoginCredentials();
-    }
-}
+.bg-light { background-color: var(--color-secondary); }
+.bg-primary { background-color: var(--color-primary); }
+.bg-success { background-color: var(--color-success); }
+.bg-warning { background-color: var(--color-warning); }
+.bg-danger { background-color: var(--color-error); }
 
-function closeCredentialsModal() {
-    if (hms) {
-        hms.closeCredentialsModal();
-    }
-}
-
-function updateCredentials() {
-    if (hms) {
-        hms.updateCredentials();
-    }
-}
-
-// ===== CLOUD BACKUP FUNCTIONS =====
-
-function cloudSignIn() {
-    const config = localStorage.getItem('ward22a_cloud_config');
-    
-    if (!config) {
-        const setupChoice = confirm(
-            '☁️ Cloud Backup Setup Required\n\n' +
-            'You need Google API credentials to enable cloud backup.\n\n' +
-            'Click OK for setup, or Cancel to continue without cloud backup.'
-        );
-        
-        if (setupChoice) {
-            showQuickCloudSetup();
-        } else {
-            showToast('Working in local mode only', 'info');
-        }
-        return;
-    }
-    
-    if (!window.CloudBackup) {
-        showToast('⚠️ Cloud backup files not loaded. Working locally.', 'warning');
-        return;
-    }
-    
-    if (cloudBackup) {
-        cloudBackup.signIn();
-    } else {
-        initializeCloudFeatures().then(() => {
-            if (cloudBackup) {
-                cloudBackup.signIn();
-            }
-        });
-    }
-}
-
-function showQuickCloudSetup() {
-    const modal = document.createElement('div');
-    modal.className = 'modal quick-setup-modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>☁️ Quick Cloud Setup</h3>
-                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
-            </div>
-            <div class="modal-body">
-                <div style="background: #e7f3ff; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
-                    <h4>🔧 Enable Google Drive Backup</h4>
-                    <p>Enter your Google Cloud credentials to enable encrypted cloud backup:</p>
-                </div>
-                
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Google API Key:</label>
-                    <input type="text" id="simpleApiKey" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="AIzaSyC...">
-                    <small style="color: #666; font-size: 0.8rem;">From Google Cloud Console → APIs & Services → Credentials</small>
-                </div>
-                
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">OAuth Client ID:</label>
-                    <input type="text" id="simpleClientId" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="xxx.apps.googleusercontent.com">
-                    <small style="color: #666; font-size: 0.8rem;">OAuth 2.0 Client ID from Google Cloud Console</small>
-                </div>
-                
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Encryption Password:</label>
-                    <input type="password" id="simplePassword" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" placeholder="Strong password for encryption">
-                    <small style="color: #666; font-size: 0.8rem;">This encrypts your data before cloud storage</small>
-                </div>
-                
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button class="btn btn--secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                    <button class="btn btn--primary" onclick="saveSimpleSetup()">Save Configuration</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-function saveSimpleSetup() {
-    const apiKey = document.getElementById('simpleApiKey').value.trim();
-    const clientId = document.getElementById('simpleClientId').value.trim();
-    const password = document.getElementById('simplePassword').value;
-    
-    if (!apiKey || !clientId || !password) {
-        alert('⚠️ Please fill in all fields');
-        return;
-    }
-    
-    if (password.length < 6) {
-        alert('⚠️ Password should be at least 6 characters');
-        return;
-    }
-    
-    // Save configuration
-    const config = {
-        apiKey: apiKey,
-        clientId: clientId,
-        encryptionPassword: password,
-        autoSync: true,
-        dailyBackup: true,
-        setupDate: new Date().toISOString()
-    };
-    
-    localStorage.setItem('ward22a_cloud_config', JSON.stringify(config));
-    
-    // Close modal
-    document.querySelector('.quick-setup-modal').remove();
-    
-    showToast('✅ Cloud backup configured!', 'success');
-}
-
-function cloudSignOut() {
-    if (cloudBackup && window.CloudBackup) {
-        cloudBackup.signOut();
-    } else {
-        showToast('Cloud backup not configured', 'info');
-    }
-}
-
-function exportAllData() {
-    if (hms) {
-        hms.exportAllData();
-    }
-}
-
-function importData() {
-    showToast('Import data functionality coming soon!', 'info');
-}
-
-function clearAllData() {
-    if (confirm('⚠️ This will permanently delete all patient data. Are you absolutely sure?')) {
-        if (confirm('⚠️ FINAL WARNING: This action cannot be undone. Continue?')) {
-            localStorage.clear();
-            showToast('All data cleared', 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        }
-    }
-}
-
-function updateCloudBackupStatus(message) {
-    const statusEl = document.getElementById('syncStatus');
-    if (statusEl) {
-        statusEl.textContent = message;
-        statusEl.className = 'sync-status success';
-    }
-}
-
-// NEW: Show on-leave patients modal
-function showOnLeavePatients() {
-    if (hms) {
-        hms.showOnLeavePatients();
-    }
-}
-
-// NEW: Dressing functions
-function showDressingForm() {
-    if (hms) {
-        hms.showDressingForm();
-    }
-}
-
-function closeDressingModal() {
-    if (hms) {
-        hms.closeDressingModal();
-    }
-}
-
-function loadDressingRecords() {
-    if (hms) {
-        hms.loadDressingRecords();
-    }
-}
-
-// ===== HMS CLASS =====
-
-class HospitalManagementSystem {
-    constructor() {
-        console.log('Initializing Ward 22A Hospital Management System...');
-        
-        this.credentials = {
-            admin_username: "ward22a",
-            admin_password: "zxcv123",
-            security_password: "Chetan@123"
-        };
-        
-        this.currentMode = null;
-        this.currentRegister = 0;
-        
-        // Updated: 32 beds without gender separation
-        this.wardConfig = {
-            totalBeds: 32,
-            beds: [],
-            units: [1, 2, 3, 4, 5, 6]
-        };
-        
-        // Generate bed IDs (B01 to B32)
-        for (let i = 1; i <= 32; i++) {
-            this.wardConfig.beds.push('B' + String(i).padStart(2, '0'));
-        }
-        
-        this.hospitalData = {
-            patients: [],
-            dischargedPatients: [],
-            transferredPatients: [],
-            staffHistory: [],
-            dailyCensus: [],
-            inventory: [],
-            dressingRecords: []
-        };
-        
-        this.init();
-    }
-    
-    init() {
-        try {
-            this.loadDataFromStorage();
-            this.loadSampleData();
-            this.updateDateTime();
-            this.setupEventListeners();
-            console.log('HMS initialized successfully');
-        } catch (error) {
-            console.error('Error initializing HMS:', error);
-        }
-    }
-    
-    // Data Management
-    saveDataToStorage() {
-        try {
-            localStorage.setItem('ward22a_hospital_data', JSON.stringify(this.hospitalData));
-            localStorage.setItem('ward22a_last_save', new Date().toISOString());
-        } catch (error) {
-            console.error('Error saving data:', error);
-        }
-    }
-    
-    loadDataFromStorage() {
-        try {
-            const savedData = localStorage.getItem('ward22a_hospital_data');
-            if (savedData) {
-                this.hospitalData = JSON.parse(savedData);
-            }
-        } catch (error) {
-            console.error('Error loading data:', error);
-        }
-    }
-    
-    loadSampleData() {
-        if (this.hospitalData.patients.length === 0) {
-            this.hospitalData.patients = [
-                {
-                    id: 'W22A001',
-                    patientName: 'Rajesh Kumar',
-                    fatherName: 'Suresh Kumar',
-                    age: 32,
-                    sex: 'Male',
-                    phoneNo: '9876543210',
-                    mrd: '4235',
-                    uhid: '789012',
-                    unit: 1,
-                    bedNo: 'B01',
-                    address: 'Karol Bagh, New Delhi-110005',
-                    diagnosis: '30% Chemical burn',
-                    mlcStatus: 'MLC',
-                    admissionDate: '2025-09-04',
-                    admissionTime: '10:30',
-                    transferTime: '14:00',
-                    transferFrom: 'BOPD/Casualty',
-                    status: 'active',
-                    onLeave: false,
-                    lastModified: new Date().toISOString()
-                },
-                {
-                    id: 'W22A002',
-                    patientName: 'Sunita Devi',
-                    fatherName: 'Ram Singh',
-                    age: 29,
-                    sex: 'Female',
-                    phoneNo: '9123456789',
-                    mrd: '25432',
-                    uhid: '890123',
-                    unit: 6,
-                    bedNo: 'B15',
-                    address: 'Rohini, Sector 15, New Delhi-110085',
-                    diagnosis: '20% DTB',
-                    mlcStatus: 'NMLC',
-                    admissionDate: '2025-09-05',
-                    admissionTime: '14:15',
-                    transferTime: '16:30',
-                    transferFrom: 'Ward 23A',
-                    status: 'active',
-                    onLeave: false,
-                    lastModified: new Date().toISOString()
-                },
-                {
-                    id: 'W22A003',
-                    patientName: 'Mohan Singh',
-                    fatherName: 'Ravi Singh',
-                    age: 45,
-                    sex: 'Male',
-                    phoneNo: '9988776655',
-                    mrd: '345678',
-                    uhid: '901234',
-                    unit: 5,
-                    bedNo: null,
-                    address: 'Lajpat Nagar, New Delhi-110024',
-                    diagnosis: 'Electrical burn both hands',
-                    mlcStatus: 'MLC',
-                    admissionDate: '2025-09-06',
-                    admissionTime: '08:45',
-                    transferTime: '10:00',
-                    transferFrom: 'BICU',
-                    status: 'active',
-                    onLeave: true,
-                    leaveDate: '2025-09-07',
-                    lastModified: new Date().toISOString()
-                }
-            ];
-        }
-        
-        // Initialize dressing records if empty
-        if (!this.hospitalData.dressingRecords) {
-            this.hospitalData.dressingRecords = [];
-        }
-    }
-    
-    // Dashboard Methods
-    renderBeds() {
-        const container = document.getElementById('bedsContainer');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        this.wardConfig.beds.forEach(bedId => {
-            const bedElement = this.createBedElement(bedId);
-            container.appendChild(bedElement);
-        });
-    }
-    
-    createBedElement(bedId) {
-        const patient = this.hospitalData.patients.find(p => p.bedNo === bedId && p.status === 'active');
-        const bed = document.createElement('div');
-        bed.className = 'bed-box';
-        bed.onclick = () => this.openBedModal(bedId);
-        
-        if (patient) {
-            if (patient.onLeave) {
-                bed.classList.add('onleave');
-                bed.innerHTML = `
-                    <div class="bed-number">${bedId}</div>
-                    <div class="bed-patient">On Leave</div>
-                    <div class="bed-patient">${patient.patientName.split(' ')[0]}</div>
-                `;
-            } else {
-                bed.classList.add('occupied');
-                bed.innerHTML = `
-                    <div class="bed-number">${bedId}</div>
-                    <div class="bed-patient">${patient.patientName.split(' ')[0]}</div>
-                    <div class="bed-patient">${patient.mlcStatus}</div>
-                `;
-            }
-        } else {
-            bed.classList.add('vacant');
-            bed.innerHTML = `
-                <div class="bed-number">${bedId}</div>
-                <div class="bed-patient">Vacant</div>
-            `;
-        }
-        
-        return bed;
-    }
-    
-    openBedModal(bedId) {
-        const patient = this.hospitalData.patients.find(p => p.bedNo === bedId && p.status === 'active');
-        const modal = document.getElementById('bedModal');
-        const title = document.getElementById('bedModalTitle');
-        const body = document.getElementById('bedModalBody');
-        
-        if (!modal || !title || !body) return;
-        
-        title.textContent = 'Bed ' + bedId + ' Details';
-        
-        if (patient) {
-            body.innerHTML = `
-                <div class="patient-modal">
-                    <h4>Patient Information</h4>
-                    <p><strong>Name:</strong> ${patient.patientName}</p>
-                    <p><strong>Father's Name:</strong> ${patient.fatherName}</p>
-                    <p><strong>Age:</strong> ${patient.age} years</p>
-                    <p><strong>Sex:</strong> ${patient.sex}</p>
-                    <p><strong>Phone:</strong> ${patient.phoneNo || 'N/A'}</p>
-                    <p><strong>MRD:</strong> ${patient.mrd}</p>
-                    <p><strong>UHID:</strong> ${patient.uhid}</p>
-                    <p><strong>Unit:</strong> ${patient.unit}</p>
-                    <p><strong>Diagnosis:</strong> ${patient.diagnosis}</p>
-                    <p><strong>MLC Status:</strong> <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></p>
-                    <p><strong>Admission:</strong> ${patient.admissionDate} at ${patient.admissionTime}</p>
-                    ${patient.onLeave ? '<p><strong>Status:</strong> <span style="color: orange; font-weight: bold;">On Leave</span></p>' : ''}
-                    
-                    ${this.currentMode === 'admin' ? `
-                        <div class="patient-actions" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
-                            <h5>Patient Actions:</h5>
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button class="btn btn--sm btn--warning" onclick="hms.sendOnLeave('${patient.id}')">Send on Leave</button>
-                                <button class="btn btn--sm btn--info" onclick="hms.transferPatient('${patient.id}')">Transfer</button>
-                                <button class="btn btn--sm btn--success" onclick="hms.dischargePatient('${patient.id}')">Discharge</button>
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        } else {
-            body.innerHTML = `
-                <div class="empty-bed-modal">
-                    <p>Bed ${bedId} is currently vacant.</p>
-                    ${this.currentMode === 'admin' ? `
-                        <div class="bed-actions" style="margin-top: 1rem;">
-                            <button class="btn btn--primary" onclick="hms.showAdmissionForm('${bedId}')">Add Patient to This Bed</button>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-        
-        modal.classList.remove('hidden');
-    }
-    
-    closeBedModal() {
-        const modal = document.getElementById('bedModal');
-        if (modal) modal.classList.add('hidden');
-    }
-    
-    // NEW: Patient Action Functions
-    sendOnLeave(patientId) {
-        const patient = this.hospitalData.patients.find(p => p.id === patientId);
-        if (!patient) return;
-        
-        if (confirm(`Send ${patient.patientName} on leave?`)) {
-            patient.onLeave = true;
-            patient.leaveDate = new Date().toISOString().split('T')[0];
-            patient.bedNo = null; // Free up the bed
-            this.saveDataToStorage();
-            this.renderBeds();
-            this.updateDashboardStats();
-            this.closeBedModal();
-            this.showToast(`${patient.patientName} sent on leave`, 'success');
-        }
-    }
-    
-    transferPatient(patientId) {
-        const patient = this.hospitalData.patients.find(p => p.id === patientId);
-        if (!patient) return;
-        
-        const transferTo = prompt(`Transfer ${patient.patientName} to which ward/department?`);
-        if (!transferTo) return;
-        
-        if (confirm(`Transfer ${patient.patientName} to ${transferTo}?`)) {
-            patient.status = 'transferred';
-            patient.transferredTo = transferTo;
-            patient.transferDate = new Date().toISOString();
-            
-            // Move to transferred patients
-            this.hospitalData.transferredPatients.push(patient);
-            this.hospitalData.patients = this.hospitalData.patients.filter(p => p.id !== patientId);
-            
-            this.saveDataToStorage();
-            this.renderBeds();
-            this.updateDashboardStats();
-            this.closeBedModal();
-            this.showToast(`${patient.patientName} transferred to ${transferTo}`, 'success');
-        }
-    }
-    
-    dischargePatient(patientId) {
-        const patient = this.hospitalData.patients.find(p => p.id === patientId);
-        if (!patient) return;
-        
-        const dischargeType = prompt(
-            `Discharge type for ${patient.patientName}:\n\n` +
-            '1. LAMA (Leave Against Medical Advice)\n' +
-            '2. DOR (Discharge on Request)\n' +
-            '3. Death\n' +
-            '4. Other\n\n' +
-            'Enter option number or type custom discharge type:'
-        );
-        
-        if (!dischargeType) return;
-        
-        let finalDischargeType;
-        switch(dischargeType) {
-            case '1': finalDischargeType = 'LAMA'; break;
-            case '2': finalDischargeType = 'DOR'; break;
-            case '3': finalDischargeType = 'Death'; break;
-            case '4': finalDischargeType = prompt('Enter custom discharge type:') || 'Other'; break;
-            default: finalDischargeType = dischargeType;
-        }
-        
-        if (confirm(`Discharge ${patient.patientName} as ${finalDischargeType}?`)) {
-            patient.status = 'discharged';
-            patient.dischargeType = finalDischargeType;
-            patient.dischargeDateTime = new Date().toISOString();
-            
-            // Move to discharged patients
-            this.hospitalData.dischargedPatients.push(patient);
-            this.hospitalData.patients = this.hospitalData.patients.filter(p => p.id !== patientId);
-            
-            this.saveDataToStorage();
-            this.renderBeds();
-            this.updateDashboardStats();
-            this.closeBedModal();
-            this.showToast(`${patient.patientName} discharged as ${finalDischargeType}`, 'success');
-        }
-    }
-    
-    updateDashboardStats() {
-        const totalPatients = this.hospitalData.patients.filter(p => p.status === 'active').length;
-        const occupiedBeds = this.hospitalData.patients.filter(p => p.status === 'active' && !p.onLeave).length;
-        const availableBeds = 32 - occupiedBeds;
-        const onLeavePatients = this.hospitalData.patients.filter(p => p.onLeave).length;
-        const mlcCases = this.hospitalData.patients.filter(p => p.mlcStatus === 'MLC').length;
-        
-        this.setElementText('totalPatients', totalPatients);
-        this.setElementText('availableBeds', availableBeds);
-        this.setElementText('onLeavePatients', onLeavePatients);
-        this.setElementText('mlcCases', mlcCases);
-        
-        // Make on-leave stat clickable
-        const onLeaveEl = document.getElementById('onLeavePatients');
-        if (onLeaveEl && onLeaveEl.parentElement) {
-            onLeaveEl.parentElement.style.cursor = 'pointer';
-            onLeaveEl.parentElement.onclick = () => this.showOnLeavePatients();
-            onLeaveEl.parentElement.title = 'Click to view on-leave patients';
-        }
-    }
-    
-    // NEW: Show on-leave patients modal
-    showOnLeavePatients() {
-        const onLeavePatients = this.hospitalData.patients.filter(p => p.onLeave);
-        
-        if (onLeavePatients.length === 0) {
-            this.showToast('No patients currently on leave', 'info');
-            return;
-        }
-        
-        const modal = document.createElement('div');
-        modal.className = 'modal on-leave-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>👥 Patients on Leave (${onLeavePatients.length})</h3>
-                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
-                </div>
-                <div class="modal-body">
-                    <div class="on-leave-list">
-                        ${onLeavePatients.map(patient => `
-                            <div class="patient-card">
-                                <div class="patient-header">
-                                    <strong>${patient.patientName}</strong> (${patient.age}${patient.sex.charAt(0)})
-                                    <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span>
-                                </div>
-                                <div class="patient-details">
-                                    <p><strong>MRD:</strong> ${patient.mrd} | <strong>Unit:</strong> ${patient.unit}</p>
-                                    <p><strong>Diagnosis:</strong> ${patient.diagnosis}</p>
-                                    <p><strong>Leave Date:</strong> ${patient.leaveDate}</p>
-                                    <p><strong>Phone:</strong> ${patient.phoneNo || 'N/A'}</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
-    
-    // Patient List Modal
-    showPatientListModal() {
-        const modal = document.getElementById('patientListModal');
-        const dateEl = document.getElementById('patientListDate');
-        
-        if (!modal) return;
-        
-        if (dateEl) {
-            const today = new Date();
-            const formattedDate = String(today.getDate()).padStart(2, '0') + '/' + 
-                               String(today.getMonth() + 1).padStart(2, '0') + '/' + 
-                               today.getFullYear();
-            dateEl.textContent = formattedDate;
-        }
-        
-        this.renderPatientListTable();
-        modal.classList.remove('hidden');
-    }
-    
-    closePatientListModal() {
-        const modal = document.getElementById('patientListModal');
-        if (modal) modal.classList.add('hidden');
-    }
-    
-    renderPatientListTable() {
-        const tbody = document.getElementById('patientListTableBody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        const activePatients = this.hospitalData.patients.filter(p => p.status === 'active');
-        
-        this.wardConfig.beds.forEach((bedId, index) => {
-            const patient = activePatients.find(p => p.bedNo === bedId);
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${patient ? patient.patientName : ''}</td>
-                <td>${patient ? patient.age + ' yr' : ''}</td>
-                <td>${patient ? patient.sex.charAt(0) : ''}</td>
-                <td>${patient ? patient.mrd : ''}</td>
-                <td>${patient ? patient.unit : ''}</td>
-                <td>${patient ? patient.diagnosis : ''}</td>
-            `;
-            
-            if (patient && patient.onLeave) {
-                row.style.backgroundColor = '#fff3cd';
-                row.style.fontStyle = 'italic';
-            }
-        });
-    }
-    
-    // Print Patient List
-    printPatientList() {
-        const activePatients = this.hospitalData.patients.filter(p => p.status === 'active');
-        const today = new Date();
-        const formattedDate = String(today.getDate()).padStart(2, '0') + '/' + 
-                           String(today.getMonth() + 1).padStart(2, '0') + '/' + 
-                           today.getFullYear();
-        
-        const printWindow = window.open('', '', 'width=800,height=600');
-        
-        let printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Ward 22A Patient List</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { text-align: center; margin-bottom: 20px; }
-                .ward-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-                .date-title { font-size: 18px; margin-bottom: 20px; }
-                table { width: 100%; border-collapse: collapse; }
-                th { background-color: #000; color: white; padding: 12px; text-align: center; border: 1px solid #000; }
-                td { padding: 12px; text-align: center; border: 1px solid #000; height: 40px; }
-                tr:nth-child(even) { background-color: #f9f9f9; }
-                .on-leave { background-color: #fff3cd !important; font-style: italic; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="ward-title">Ward -22A</div>
-                <div class="date-title">Date - ${formattedDate}</div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Bed No.</th>
-                        <th>Patient Name</th>
-                        <th>Age</th>
-                        <th>Sex</th>
-                        <th>MRD</th>
-                        <th>Unit</th>
-                        <th>Diagnosis</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        for (let i = 1; i <= 32; i++) {
-            const bedId = 'B' + String(i).padStart(2, '0');
-            const patient = activePatients.find(p => p.bedNo === bedId);
-            
-            let rowClass = '';
-            if (patient && patient.onLeave) {
-                rowClass = 'on-leave';
-            }
-            
-            printContent += `
-                <tr class="${rowClass}">
-                    <td>${i}</td>
-                    <td>${patient ? patient.patientName : ''}</td>
-                    <td>${patient ? patient.age + ' yr' : ''}</td>
-                    <td>${patient ? patient.sex.charAt(0) : ''}</td>
-                    <td>${patient ? patient.mrd : ''}</td>
-                    <td>${patient ? patient.unit : ''}</td>
-                    <td>${patient ? patient.diagnosis : ''}</td>
-                </tr>
-            `;
-        }
-        
-        printContent += `
-                </tbody>
-            </table>
-        </body>
-        </html>
-        `;
-        
-        printWindow.document.write(printContent);
-        printWindow.document.close();
-        
-        printWindow.onload = function() {
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
-        };
-    }
-    
-    downloadPatientList() {
-        const activePatients = this.hospitalData.patients.filter(p => p.status === 'active');
-        
-        const csvContent = [
-            ['Bed No.', 'Patient Name', 'Age', 'Sex', 'MRD', 'Unit', 'Diagnosis'],
-            ...activePatients.map(patient => [
-                patient.bedNo || 'On Leave',
-                patient.patientName,
-                patient.age + ' yr',
-                patient.sex.charAt(0),
-                patient.mrd,
-                patient.unit,
-                patient.diagnosis
-            ])
-        ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-        
-        this.downloadFile(csvContent, `Ward22A_PatientList_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
-        this.showToast('Patient list downloaded successfully', 'success');
-    }
-    
-    // Register rendering
-    renderRegisterContent(num) {
-        switch(parseInt(num)) {
-            case 0:
-                this.renderBeds();
-                this.updateDashboardStats();
-                break;
-            case 1:
-                this.renderAdmissionRegister();
-                break;
-            case 2:
-                this.renderDischargeRegister();
-                break;
-            case 3:
-                this.renderTreatmentRegister();
-                break;
-            case 4:
-                this.renderDailyCensus();
-                break;
-            case 5:
-                this.renderDataManagement();
-                break;
-            case 6: // NEW: Dressing register
-                this.renderDressingRegister();
-                break;
-            default:
-                break;
-        }
-    }
-    
-    renderAdmissionRegister() {
-        const tbody = document.getElementById('admissionTableBody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        this.hospitalData.patients.forEach(patient => {
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${patient.patientName}</td>
-                <td>${patient.fatherName}</td>
-                <td>${patient.age}</td>
-                <td>${patient.sex}</td>
-                <td>${patient.phoneNo || 'N/A'}</td>
-                <td>${patient.mrd}</td>
-                <td>${patient.uhid}</td>
-                <td>${patient.unit}</td>
-                <td>${patient.bedNo || 'On Leave'}</td>
-                <td>${patient.address}</td>
-                <td>${patient.diagnosis}</td>
-                <td><span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></td>
-                <td>${patient.admissionDate} ${patient.admissionTime}</td>
-                <td>${patient.transferFrom}</td>
-                <td>
-                    ${this.currentMode === 'admin' ? `
-                        <button class="btn btn--sm btn--primary">Edit</button>
-                        <button class="delete-btn" onclick="deleteEntry('admission', '${patient.id}')" title="Delete">×</button>
-                    ` : 'View Only'}
-                </td>
-            `;
-            
-            if (patient.onLeave) {
-                row.style.backgroundColor = '#fff3cd';
-            }
-        });
-    }
-    
-    renderDischargeRegister() {
-        const tbody = document.getElementById('dischargeTableBody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        this.hospitalData.dischargedPatients.forEach(patient => {
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${patient.patientName}</td>
-                <td>${patient.age}</td>
-                <td>${patient.sex}</td>
-                <td>${patient.bedNo || 'On Leave'}</td>
-                <td>${patient.mrd}</td>
-                <td>${patient.unit}</td>
-                <td>${patient.diagnosis}</td>
-                <td><span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></td>
-                <td>${patient.admissionDate}</td>
-                <td>${new Date(patient.dischargeDateTime).toLocaleString()}</td>
-                <td><span class="badge info">${patient.dischargeType}</span></td>
-                <td>
-                    ${this.currentMode === 'admin' ? `
-                        <button class="delete-btn" onclick="deleteEntry('discharge', '${patient.id}')" title="Delete">×</button>
-                    ` : ''}
-                </td>
-            `;
-        });
-    }
-    
-    // NEW: Updated Treatment Register with inline tags
-    renderTreatmentRegister() {
-        const container = document.getElementById('currentPatientsList');
-        if (!container) return;
-        
-        container.innerHTML = '<h3>Current Patients in Ward 22A</h3>';
-        
-        const activePatients = this.hospitalData.patients.filter(p => p.status === 'active');
-        
-        if (activePatients.length === 0) {
-            container.innerHTML += '<p>No active patients currently in the ward.</p>';
-            return;
-        }
-        
-        // Create inline patient tags
-        const patientsContainer = document.createElement('div');
-        patientsContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;';
-        
-        activePatients.forEach(patient => {
-            const patientTag = document.createElement('div');
-            patientTag.className = 'patient-tag';
-            patientTag.style.cssText = `
-                background: ${patient.onLeave ? '#fff3cd' : '#e7f3ff'};
-                border: 1px solid ${patient.onLeave ? '#ffeaa7' : '#b3d7ff'};
-                border-radius: 20px;
-                padding: 0.5rem 1rem;
-                margin: 0.25rem;
-                font-size: 0.9rem;
-                cursor: pointer;
-                transition: all 0.3s;
-                display: inline-flex;
-                align-items: center;
-                gap: 0.5rem;
-            `;
-            
-            patientTag.innerHTML = `
-                <div>
-                    <strong>${patient.bedNo || 'On Leave'}</strong> - ${patient.patientName} 
-                    <span style="color: #666;">(${patient.age}${patient.sex.charAt(0)})</span>
-                    <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}" style="font-size: 0.7rem; margin-left: 0.5rem;">${patient.mlcStatus}</span>
-                    ${patient.onLeave ? '<span style="color: orange; font-weight: bold; margin-left: 0.5rem;">ON LEAVE</span>' : ''}
-                </div>
-            `;
-            
-            patientTag.onclick = () => {
-                this.showPatientDetails(patient);
-            };
-            
-            patientTag.onmouseover = () => {
-                patientTag.style.transform = 'scale(1.05)';
-                patientTag.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-            };
-            
-            patientTag.onmouseout = () => {
-                patientTag.style.transform = 'scale(1)';
-                patientTag.style.boxShadow = 'none';
-            };
-            
-            patientsContainer.appendChild(patientTag);
-        });
-        
-        container.appendChild(patientsContainer);
-    }
-    
-    showPatientDetails(patient) {
-        const modal = document.createElement('div');
-        modal.className = 'modal patient-details-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>👤 ${patient.patientName} - Details</h3>
-                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
-                </div>
-                <div class="modal-body">
-                    <div class="patient-detail-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                        <div><strong>Bed:</strong> ${patient.bedNo || 'On Leave'}</div>
-                        <div><strong>Age/Sex:</strong> ${patient.age} years / ${patient.sex}</div>
-                        <div><strong>Phone:</strong> ${patient.phoneNo || 'N/A'}</div>
-                        <div><strong>MRD:</strong> ${patient.mrd}</div>
-                        <div><strong>UHID:</strong> ${patient.uhid}</div>
-                        <div><strong>Unit:</strong> ${patient.unit}</div>
-                        <div><strong>MLC:</strong> <span class="badge ${patient.mlcStatus === 'MLC' ? 'danger' : 'success'}">${patient.mlcStatus}</span></div>
-                        <div><strong>Status:</strong> ${patient.onLeave ? '<span style="color: orange;">On Leave</span>' : '<span style="color: green;">In Ward</span>'}</div>
-                    </div>
-                    <div style="margin-top: 1rem;">
-                        <strong>Diagnosis:</strong> ${patient.diagnosis}
-                    </div>
-                    <div style="margin-top: 1rem;">
-                        <strong>Address:</strong> ${patient.address}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-    }
-    
-    renderDailyCensus() {
-        const today = new Date().toISOString().split('T')[0];
-        this.setElementValue('censusDate', today);
-    }
-    
-    renderDataManagement() {
-        // Update system info when data management is rendered
-        this.updateSystemInfo();
-    }
-    
-    // NEW: Dressing Register
-    renderDressingRegister() {
-        const container = document.getElementById('dressingContainer');
-        if (!container) return;
-        
-        container.innerHTML = `
-            <div class="dressing-controls">
-                <label for="dressingDate">Select Date:</label>
-                <input type="date" id="dressingDate" class="form-control" onchange="loadDressingRecords()" value="${new Date().toISOString().split('T')[0]}">
-                ${this.currentMode === 'admin' ? '<button class="btn btn--primary" onclick="showDressingForm()">Add Dressing Record</button>' : ''}
-            </div>
-            <div id="dressingRecords" class="dressing-records" style="margin-top: 1rem;">
-                <p>Select a date to view dressing records</p>
-            </div>
-        `;
-        
-        // Load today's records by default
-        this.loadDressingRecords();
-    }
-    
-    loadDressingRecords() {
-        const selectedDate = document.getElementById('dressingDate').value;
-        const container = document.getElementById('dressingRecords');
-        
-        if (!selectedDate || !container) return;
-        
-        const records = this.hospitalData.dressingRecords.filter(record => 
-            record.date === selectedDate
-        );
-        
-        if (records.length === 0) {
-            container.innerHTML = `<p>No dressing records found for ${new Date(selectedDate).toLocaleDateString()}</p>`;
-            return;
-        }
-        
-        container.innerHTML = `
-            <h4>Dressing Records - ${new Date(selectedDate).toLocaleDateString()}</h4>
-            <div class="table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Bed No.</th>
-                            <th>Patient Name</th>
-                            <th>Age</th>
-                            <th>Sex</th>
-                            <th>MRD</th>
-                            <th>Unit</th>
-                            <th>Dressing Material</th>
-                            <th>Dresser</th>
-                            <th>Shown To</th>
-                            <th>Sample</th>
-                            ${this.currentMode === 'admin' ? '<th>Actions</th>' : ''}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${records.map(record => `
-                            <tr>
-                                <td>${record.bedNo}</td>
-                                <td>${record.patientName}</td>
-                                <td>${record.age}</td>
-                                <td>${record.sex}</td>
-                                <td>${record.mrd}</td>
-                                <td>${record.unit}</td>
-                                <td>${record.dressingMaterial}</td>
-                                <td>${record.dresser}</td>
-                                <td>${record.shownTo || '-'}</td>
-                                <td>${record.sample || '-'}</td>
-                                ${this.currentMode === 'admin' ? `
-                                    <td>
-                                        <button class="delete-btn" onclick="hms.deleteDressingRecord('${record.id}')" title="Delete">×</button>
-                                    </td>
-                                ` : ''}
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-    
-    showDressingForm() {
-        const modal = document.createElement('div');
-        modal.className = 'modal dressing-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>➕ Add Dressing Record</h3>
-                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
-                </div>
-                <div class="modal-body">
-                    <form id="dressingForm" class="dressing-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Date:</label>
-                                <input type="date" name="date" class="form-control" value="${new Date().toISOString().split('T')[0]}" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Bed No:</label>
-                                <select name="bedNo" class="form-control" required onchange="hms.updatePatientInfo(this)">
-                                    <option value="">Select Bed</option>
-                                    ${this.wardConfig.beds.map(bedId => {
-                                        const patient = this.hospitalData.patients.find(p => p.bedNo === bedId && p.status === 'active');
-                                        return `<option value="${bedId}" ${patient ? `data-patient='${JSON.stringify(patient)}'` : ''}>${bedId}${patient ? ` - ${patient.patientName}` : ' (Vacant)'}</option>`;
-                                    }).join('')}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Patient Name:</label>
-                                <input type="text" name="patientName" class="form-control" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Age:</label>
-                                <input type="number" name="age" class="form-control" readonly>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Sex:</label>
-                                <input type="text" name="sex" class="form-control" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>MRD:</label>
-                                <input type="text" name="mrd" class="form-control" readonly>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Unit:</label>
-                                <input type="number" name="unit" class="form-control" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Dressing Material:</label>
-                                <input type="text" name="dressingMaterial" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Dresser:</label>
-                                <input type="text" name="dresser" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Shown To (Optional):</label>
-                                <input type="text" name="shownTo" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Sample (Optional):</label>
-                            <input type="text" name="sample" class="form-control">
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn--secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                            <button type="submit" class="btn btn--primary">Save Dressing Record</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Setup form submission
-        document.getElementById('dressingForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addDressingRecord();
-        });
-    }
-    
-    updatePatientInfo(bedSelect) {
-        const selectedOption = bedSelect.options[bedSelect.selectedIndex];
-        const patientData = selectedOption.getAttribute('data-patient');
-        
-        const form = bedSelect.closest('form');
-        if (!form) return;
-        
-        if (patientData) {
-            const patient = JSON.parse(patientData);
-            form.patientName.value = patient.patientName;
-            form.age.value = patient.age;
-            form.sex.value = patient.sex;
-            form.mrd.value = patient.mrd;
-            form.unit.value = patient.unit;
-        } else {
-            form.patientName.value = '';
-            form.age.value = '';
-            form.sex.value = '';
-            form.mrd.value = '';
-            form.unit.value = '';
-        }
-    }
-    
-    addDressingRecord() {
-        const form = document.getElementById('dressingForm');
-        const formData = new FormData(form);
-        const recordData = {};
-        
-        for (let [key, value] of formData.entries()) {
-            recordData[key] = value;
-        }
-        
-        recordData.id = 'DR' + Date.now();
-        recordData.createdAt = new Date().toISOString();
-        
-        this.hospitalData.dressingRecords.push(recordData);
-        this.saveDataToStorage();
-        
-        // Close modal
-        document.querySelector('.dressing-modal').remove();
-        
-        // Reload records
-        this.loadDressingRecords();
-        
-        this.showToast('Dressing record added successfully', 'success');
-    }
-    
-    deleteDressingRecord(recordId) {
-        const password = prompt('⚠️ DELETE DRESSING RECORD\n\nEnter security password:');
-        
-        if (password !== this.credentials.security_password) {
-            if (password !== null) {
-                this.showToast('❌ Invalid security password', 'error');
-            }
-            return;
-        }
-        
-        if (confirm('Delete this dressing record?')) {
-            this.hospitalData.dressingRecords = this.hospitalData.dressingRecords.filter(r => r.id !== recordId);
-            this.saveDataToStorage();
-            this.loadDressingRecords();
-            this.showToast('Dressing record deleted', 'success');
-        }
-    }
-    
-    closeDressingModal() {
-        const modal = document.querySelector('.dressing-modal');
-        if (modal) modal.remove();
-    }
-    
-    generateCensusReport() {
-        const selectedDate = this.getElementValue('censusDate');
-        const censusData = document.getElementById('censusData');
-        
-        if (!selectedDate) {
-            this.showToast('Please select a date', 'error');
-            return;
-        }
-        
-        const totalPatients = this.hospitalData.patients.filter(p => p.status === 'active').length;
-        const onLeavePatients = this.hospitalData.patients.filter(p => p.onLeave).length;
-        
-        if (censusData) {
-            censusData.innerHTML = `
-                <div class="census-report">
-                    <h4>Daily Census Report - ${new Date(selectedDate).toLocaleDateString()}</h4>
-                    <div class="census-grid">
-                        <div class="census-item">
-                            <label>Total Active Patients:</label>
-                            <span>${totalPatients}</span>
-                        </div>
-                        <div class="census-item">
-                            <label>Patients On Leave:</label>
-                            <span>${onLeavePatients}</span>
-                        </div>
-                        <div class="census-item">
-                            <label>Occupied Beds:</label>
-                            <span>${totalPatients - onLeavePatients}</span>
-                        </div>
-                        <div class="census-item">
-                            <label>Available Beds:</label>
-                            <span>${32 - (totalPatients - onLeavePatients)}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    // Admission Form
-    showAdmissionForm(preSelectedBed = null) {
-        const modal = document.getElementById('admissionModal');
-        const bedSelect = document.getElementById('availableBedSelect');
-        
-        if (!modal || !bedSelect) return;
-        
-        bedSelect.innerHTML = '<option value="">Select Bed</option>';
-        
-        // Add on-leave option
-        const onLeaveOption = document.createElement('option');
-        onLeaveOption.value = 'ON_LEAVE';
-        onLeaveOption.textContent = '⚠️ Admit On Leave (No Bed Assignment)';
-        bedSelect.appendChild(onLeaveOption);
-        
-        // Add available beds
-        const occupiedBeds = this.hospitalData.patients
-            .filter(p => p.status === 'active' && !p.onLeave && p.bedNo)
-            .map(p => p.bedNo);
-        
-        this.wardConfig.beds.forEach(bedId => {
-            if (!occupiedBeds.includes(bedId)) {
-                const option = document.createElement('option');
-                option.value = bedId;
-                option.textContent = bedId;
-                if (bedId === preSelectedBed) option.selected = true;
-                bedSelect.appendChild(option);
-            }
-        });
-        
-        modal.classList.remove('hidden');
-    }
-    
-    closeAdmissionModal() {
-        const modal = document.getElementById('admissionModal');
-        const form = document.getElementById('admissionForm');
-        
-        if (modal) modal.classList.add('hidden');
-        if (form) form.reset();
-    }
-    
-    // Setup Event Listeners
-    setupEventListeners() {
-        const admissionForm = document.getElementById('admissionForm');
-        if (admissionForm) {
-            admissionForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.addNewPatient();
-            });
-        }
-    }
-    
-    addNewPatient() {
-        const form = document.getElementById('admissionForm');
-        if (!form) return;
-        
-        const formData = new FormData(form);
-        const patientData = {};
-        
-        for (let [key, value] of formData.entries()) {
-            patientData[key] = value;
-        }
-        
-        patientData.id = 'W22A' + String(Date.now()).substr(-6);
-        patientData.status = 'active';
-        patientData.lastModified = new Date().toISOString();
-        
-        if (patientData.bedNo === 'ON_LEAVE') {
-            patientData.onLeave = true;
-            patientData.leaveDate = new Date().toISOString().split('T')[0];
-            patientData.bedNo = null;
-        } else {
-            patientData.onLeave = false;
-        }
-        
-        if (patientData.transferFrom === 'Other') {
-            patientData.transferFrom = patientData.otherTransferFrom || 'Other';
-        }
-        
-        this.hospitalData.patients.push(patientData);
-        this.saveDataToStorage();
-        this.closeAdmissionModal();
-        this.renderBeds();
-        this.updateDashboardStats();
-        this.renderRegisterContent(this.currentRegister);
-        
-        if (patientData.onLeave) {
-            this.showToast('Patient admitted on leave successfully', 'success');
-        } else {
-            this.showToast('Patient admitted successfully', 'success');
-        }
-    }
-    
-    // Delete Entry
-    deleteEntry(type, id) {
-        const password = prompt('⚠️ PERMANENT DELETE\n\nEnter security password to confirm:');
-        
-        if (password !== this.credentials.security_password) {
-            if (password !== null) {
-                this.showToast('❌ Invalid security password', 'error');
-            }
-            return;
-        }
-        
-        const confirmDelete = confirm('⚠️ FINAL CONFIRMATION\n\nPermanently delete this entry?');
-        if (!confirmDelete) return;
-        
-        let deleted = false;
-        
-        switch(type) {
-            case 'admission':
-                const patientIndex = this.hospitalData.patients.findIndex(p => p.id === id);
-                if (patientIndex !== -1) {
-                    this.hospitalData.patients.splice(patientIndex, 1);
-                    deleted = true;
-                }
-                break;
-            case 'discharge':
-                const dischargeIndex = this.hospitalData.dischargedPatients.findIndex(p => p.id === id);
-                if (dischargeIndex !== -1) {
-                    this.hospitalData.dischargedPatients.splice(dischargeIndex, 1);
-                    deleted = true;
-                }
-                break;
-        }
-        
-        if (deleted) {
-            this.saveDataToStorage();
-            this.renderBeds();
-            this.updateDashboardStats();
-            this.renderRegisterContent(this.currentRegister);
-            this.showToast('Entry deleted permanently', 'success');
-        }
-    }
-    
-    // Export Functions
-    exportData() {
-        this.showToast('Export functionality available', 'info');
-    }
-    
-    exportRegister(num) {
-        let data, filename;
-        
-        switch(num) {
-            case 1:
-                data = this.hospitalData.patients;
-                filename = 'admission_register.csv';
-                break;
-            default:
-                this.showToast('Export not available for this register', 'info');
-                return;
-        }
-        
-        this.downloadCSV(data, filename);
-    }
-    
-    downloadCSV(data, filename) {
-        if (!data || data.length === 0) {
-            this.showToast('No data to export', 'error');
-            return;
-        }
-        
-        const headers = Object.keys(data[0]);
-        const csvContent = [
-            headers.join(','),
-            ...data.map(row => 
-                headers.map(header => JSON.stringify(row[header] || '')).join(',')
-            )
-        ].join('\n');
-        
-        this.downloadFile(csvContent, filename, 'text/csv');
-        this.showToast(filename + ' downloaded successfully', 'success');
-    }
-    
-    downloadFile(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-    }
-    
-    exportAllData() {
-        const allData = {
-            exportDate: new Date().toISOString(),
-            ward: 'Ward 22A',
-            hospital: 'VMMC & Safdarjung Hospital',
-            hospitalData: this.hospitalData
-        };
-        
-        const dataStr = JSON.stringify(allData, null, 2);
-        this.downloadFile(dataStr, `Ward22A_Complete_Backup_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
-        this.showToast('Complete data exported successfully', 'success');
-    }
-    
-    // Save Data
-    saveData() {
-        this.showLoading('Saving data...');
-        setTimeout(() => {
-            this.saveDataToStorage();
-            this.hideLoading();
-            this.showToast('Data saved successfully', 'success');
-            this.updateSystemInfo();
-        }, 1000);
-    }
-    
-    updateSystemInfo() {
-        const lastSave = localStorage.getItem('ward22a_last_save');
-        const totalRecords = this.hospitalData.patients.length + this.hospitalData.dischargedPatients.length;
-        const dataStr = JSON.stringify(this.hospitalData);
-        const storageSize = new Blob([dataStr]).size;
-        
-        this.setElementText('lastSaveTime', lastSave ? new Date(lastSave).toLocaleString() : 'Never');
-        this.setElementText('totalRecords', totalRecords);
-        this.setElementText('storageUsed', this.formatStorageSize(storageSize));
-    }
-    
-    formatStorageSize(bytes) {
-        const sizes = ['Bytes', 'KB', 'MB'];
-        if (bytes === 0) return '0 Bytes';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-    }
-    
-    // Credential Management
-    changeLoginCredentials() {
-        if (this.currentMode !== 'admin') return;
-        const modal = document.getElementById('credentialsModal');
-        if (modal) modal.classList.remove('hidden');
-    }
-    
-    closeCredentialsModal() {
-        const modal = document.getElementById('credentialsModal');
-        if (modal) modal.classList.add('hidden');
-    }
-    
-    updateCredentials() {
-        const securityCheck = this.getElementValue('securityPasswordCheck');
-        const newUsername = this.getElementValue('newUsername');
-        const newPassword = this.getElementValue('newPassword');
-        const newSecurityPassword = this.getElementValue('newSecurityPassword');
-        
-        if (securityCheck !== this.credentials.security_password) {
-            this.showToast('Invalid security password', 'error');
-            return;
-        }
-        
-        if (!newUsername || !newPassword || !newSecurityPassword) {
-            this.showToast('All fields are required', 'error');
-            return;
-        }
-        
-        this.credentials.admin_username = newUsername;
-        this.credentials.admin_password = newPassword;
-        this.credentials.security_password = newSecurityPassword;
-        
-        localStorage.setItem('ward22a_credentials', JSON.stringify(this.credentials));
-        this.closeCredentialsModal();
-        this.showToast('Credentials updated successfully', 'success');
-    }
-    
-    // Utility Methods
-    updateDateTime() {
-        const now = new Date();
-        const dateTimeString = now.toLocaleString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        this.setElementText('currentDateTime', dateTimeString);
-        setTimeout(() => this.updateDateTime(), 60000);
-    }
-    
-    // Helper Methods
-    setElementText(id, text) {
-        const element = document.getElementById(id);
-        if (element) element.textContent = text;
-    }
-    
-    setElementValue(id, value) {
-        const element = document.getElementById(id);
-        if (element) element.value = value;
-    }
-    
-    getElementValue(id) {
-        const element = document.getElementById(id);
-        return element ? element.value : '';
-    }
-    
-    showToast(message, type = 'info') {
-        console.log(`${type.toUpperCase()}: ${message}`);
-        
-        // Create toast if container exists
-        const container = document.getElementById('toastContainer');
-        if (container) {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 3000);
-        }
-    }
-    
-    showLoading(message = 'Loading...') {
-        const loading = document.getElementById('loadingIndicator');
-        if (loading) {
-            const loadingText = loading.querySelector('p');
-            if (loadingText) loadingText.textContent = message;
-            loading.classList.remove('hidden');
-        }
-    }
-    
-    hideLoading() {
-        const loading = document.getElementById('loadingIndicator');
-        if (loading) loading.classList.add('hidden');
-    }
-}
-
-// ===== CLOUD BACKUP INITIALIZATION =====
-
-async function initializeCloudFeatures() {
-    try {
-        console.log('🌥️ Initializing cloud backup features...');
-        
-        // Check if cloud setup is configured
-        const config = localStorage.getItem('ward22a_cloud_config');
-        if (!config) {
-            console.log('☁️ Cloud backup not configured');
-            return;
-        }
-        
-        const cloudConfig = JSON.parse(config);
-        console.log('📋 Cloud configuration loaded:', {
-            hasApiKey: !!cloudConfig.apiKey,
-            hasClientId: !!cloudConfig.clientId,
-            hasEncryption: !!cloudConfig.encryptionPassword
-        });
-        
-        // Initialize real cloud backup system
-        if (window.CloudBackup) {
-            cloudBackup = new CloudBackup();
-            
-            // Initialize Google Drive API
-            try {
-                await cloudBackup.initializeGoogleDrive();
-                console.log('✅ Google Drive API ready');
-            } catch (error) {
-                console.error('❌ Google Drive initialization failed:', error);
-                showToast('⚠️ Cloud backup initialization failed: ' + error.message, 'warning');
-            }
-        } else {
-            console.warn('⚠️ CloudBackup class not available. Make sure cloudBackup.js is loaded.');
-        }
-        
-        // Initialize encryption system
-        if (window.DataEncryption) {
-            const encryption = new DataEncryption();
-            const testResult = await encryption.testEncryption();
-            console.log('🔐 Encryption test:', testResult ? 'PASSED' : 'FAILED');
-        } else {
-            console.warn('⚠️ DataEncryption class not available. Make sure encryption.js is loaded.');
-        }
-        
-        // Update UI to show cloud features are available
-        updateCloudUI();
-        
-        // Setup automatic backup if enabled
-        if (cloudBackup && cloudConfig.dailyBackup) {
-            cloudBackup.setupAutoBackup(24); // Every 24 hours
-            console.log('⏰ Automatic backup enabled');
-        }
-        
-        console.log('✅ Cloud features initialized successfully');
-        
-    } catch (error) {
-        console.error('❌ Cloud initialization failed:', error);
-        showToast('❌ Cloud backup initialization failed', 'error');
-    }
-}
-
-function updateCloudUI() {
-    // Enable cloud backup buttons
-    const signInBtn = document.getElementById('googleSignInBtn');
-    const backupBtn = document.getElementById('cloudBackupBtn');
-    const restoreBtn = document.getElementById('cloudRestoreBtn');
-    
-    if (signInBtn) {
-        signInBtn.disabled = false;
-        signInBtn.style.opacity = '1';
-    }
-    
-    // Add configured indicator
-    const cloudSection = document.querySelector('.cloud-backup-section');
-    if (cloudSection && !cloudSection.querySelector('.cloud-configured-indicator')) {
-        const indicator = document.createElement('div');
-        indicator.className = 'cloud-configured-indicator';
-        indicator.innerHTML = '✅ Cloud backup configured and ready';
-        indicator.style.cssText = 'background: #d4edda; color: #155724; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; font-weight: 600; text-align: center;';
-        cloudSection.insertBefore(indicator, cloudSection.firstChild);
-    }
-}
-
-// ===== INITIALIZATION =====
-
-function updateModeDisplay(mode) {
-    const modeEl = document.getElementById('currentMode');
-    const changeCredsBtn = document.getElementById('changeCredsBtn');
-    const addPatientBtn = document.getElementById('addPatientBtn');
-    const addAdmissionBtn = document.getElementById('addAdmissionBtn');
-    const addInventoryBtn = document.getElementById('addInventoryBtn');
-    const addDressingBtn = document.getElementById('addDressingBtn');
-    
-    if (modeEl) {
-        if (mode === 'admin') {
-            modeEl.textContent = 'Admin Mode';
-            modeEl.className = 'mode-badge admin';
-        } else {
-            modeEl.textContent = 'View Only Mode';
-            modeEl.className = 'mode-badge view';
-        }
-    }
-    
-    const adminButtons = [changeCredsBtn, addPatientBtn, addAdmissionBtn, addInventoryBtn, addDressingBtn];
-    adminButtons.forEach(btn => {
-        if (btn) {
-            btn.style.display = mode === 'admin' ? 'inline-block' : 'none';
-        }
-    });
-}
-
-function initializeHMS() {
-    if (!hms) {
-        hms = new HospitalManagementSystem();
-        window.hms = hms; // Make available globally
-        
-        // Set current mode
-        const modeEl = document.getElementById('currentMode');
-        if (modeEl) {
-            hms.currentMode = modeEl.textContent.includes('Admin') ? 'admin' : 'view';
-        }
-        
-        // Initial render
-        hms.renderBeds();
-        hms.updateDashboardStats();
-        hms.updateSystemInfo();
-        
-        // Initialize cloud features
-        setTimeout(() => {
-            initializeCloudFeatures();
-        }, 1000);
-    }
-}
-
-// Show toast utility function
-function showToast(message, type = 'info') {
-    console.log(`${type.toUpperCase()}: ${message}`);
-    
-    const container = document.getElementById('toastContainer');
-    if (container) {
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 3000);
-    } else {
-        // Fallback to alert if no toast container
-        if (type === 'error') {
-            alert('❌ ' + message);
-        }
-    }
-}
-
-// Add CSS for improved styling
-document.addEventListener('DOMContentLoaded', () => {
-    const improvedCSS = `
-        <style>
-        /* Updated bed colors - subtle light green for occupied */
-        .bed-box.occupied {
-            border-color: #90EE90;
-            background: rgba(144, 238, 144, 0.3);
-        }
-        
-        .bed-box.occupied:hover {
-            background: rgba(144, 238, 144, 0.5);
-        }
-        
-        /* Patient tags for treatment register */
-        .patient-tag:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        /* On-leave modal styles */
-        .on-leave-modal .modal-content {
-            max-width: 800px;
-        }
-        
-        .on-leave-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .patient-card {
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .patient-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        
-        .patient-details p {
-            margin: 0.25rem 0;
-            font-size: 0.9rem;
-        }
-        
-        /* Dressing form styles */
-        .dressing-form .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .dressing-form .form-group.full-width {
-            grid-column: span 2;
-        }
-        
-        .dressing-controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 6px;
-        }
-        
-        /* Census Report Styles */
-        .census-report {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .census-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .census-item {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .census-item label {
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .census-item span {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #007bff;
-        }
-        
-        /* Toast improvements */
-        .toast {
-            background: #333;
-            color: white;
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10000;
-            max-width: 400px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            animation: slideInRight 0.3s ease;
-        }
-        
-        .toast.success { background: #28a745; }
-        .toast.error { background: #dc3545; }
-        .toast.warning { background: #ffc107; color: #212529; }
-        .toast.info { background: #17a2b8; }
-        
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        /* Number input styling */
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-        
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .dressing-form .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .dressing-form .form-group.full-width {
-                grid-column: span 1;
-            }
-            
-            .patient-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-            
-            .patient-tag {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .census-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        </style>
-    `;
-    
-    document.head.insertAdjacentHTML('beforeend', improvedCSS);
-    
-    console.log('🏥 Ward 22A HMS - Updated Version Loading...');
-    console.log('🔐 Login: ward22a / zxcv123');
-    console.log('🔒 Security Password: Chetan@123');
-    console.log('🛏️ 32 universal beds (B01-B32)');
-    console.log('✨ Features: On-leave click, dressing records, treatment tags, discharge options');
-    
-    // HMS will be initialized when mode is selected
-});
+.text-primary { color: var(--color-primary); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+.text-danger { color: var(--color-error); }
+.text-muted { color: var(--color-text-secondary); }
