@@ -7,6 +7,30 @@ let cloudBackup = null;
 let syncManager = null;
 let versionControl = null;
 
+const DEFAULT_CREDENTIALS = {
+    admin_username: 'ward22a',
+    admin_password: 'zxcv123',
+    security_password: 'Chetan@123'
+};
+
+function getStoredCredentials() {
+    const stored = localStorage.getItem('ward22a_credentials');
+    if (!stored) {
+        return { ...DEFAULT_CREDENTIALS };
+    }
+
+    try {
+        const parsed = JSON.parse(stored);
+        return {
+            ...DEFAULT_CREDENTIALS,
+            ...parsed
+        };
+    } catch (error) {
+        console.warn('Failed to parse stored credentials, using defaults.', error);
+        return { ...DEFAULT_CREDENTIALS };
+    }
+}
+
 // ===== GLOBAL FUNCTIONS (Called from HTML) =====
 
 function selectMode(mode) {
@@ -42,11 +66,9 @@ function attemptLogin() {
     const password = document.getElementById('password').value;
     const errorDiv = document.getElementById('loginError');
     
-    // Final credentials
-    const defaultUser = 'ward22a';
-    const defaultPass = 'zxcv123';
+    const { admin_username, admin_password } = getStoredCredentials();
     
-    if (username === defaultUser && password === defaultPass) {
+    if (username === admin_username && password === admin_password) {
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
         updateModeDisplay('admin');
@@ -480,11 +502,7 @@ class HospitalManagementSystem {
     constructor() {
         console.log('Initializing Ward 22A Hospital Management System...');
         
-        this.credentials = {
-            admin_username: "ward22a",
-            admin_password: "zxcv123",
-            security_password: "Chetan@123"
-        };
+        this.credentials = getStoredCredentials();
         
         this.currentMode = null;
         this.currentRegister = 0;

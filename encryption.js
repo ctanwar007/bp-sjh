@@ -16,10 +16,12 @@ class DataEncryption {
             ['deriveBits', 'deriveKey']
         );
 
+        const saltBytes = typeof salt === 'string' ? encoder.encode(salt) : salt;
+
         return window.crypto.subtle.deriveKey(
             {
                 name: 'PBKDF2',
-                salt: encoder.encode(salt),
+                salt: saltBytes,
                 iterations: 100000, // 100k iterations for security
                 hash: 'SHA-256'
             },
