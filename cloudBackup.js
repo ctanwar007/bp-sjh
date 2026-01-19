@@ -1,114 +1,200 @@
-// encryption.js - Real AES-256 Encryption for Patient Data
-class DataEncryption {
+class CloudBackup {
     constructor() {
-        this.algorithm = 'AES-GCM';
-        this.keyLength = 256;
+        this.folderName = 'Ward22A_Backups';
+        this.discoveryDoc = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        this.scopes = 'https://www.googleapis.com/auth/drive.file';
+        this.authInstance = null;
+        this.isSignedIn = false;
+        this.encryption = window.DataEncryption ? new DataEncryption() : null;
     }
 
-    // Generate encryption key from password using PBKDF2
-    async generateKey(password, salt) {
-        const encoder = new TextEncoder();
-        const keyMaterial = await window.crypto.subtle.importKey(
-            'raw',
-            encoder.encode(password),
-            { name: 'PBKDF2' },
-            false,
-            ['deriveBits', 'deriveKey']
-        );
+    async ensureGapiLoaded() {
+        if (window.gapi) {
+            return;
+        }
 
-        return window.crypto.subtle.deriveKey(
-            {
-                name: 'PBKDF2',
-                salt: encoder.encode(salt),
-                iterations: 100000, // 100k iterations for security
-                hash: 'SHA-256'
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://apis.google.com/js/api.js';
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error('Failed to load Google API script'));
+            document.head.appendChild(script);
+        });
+    }
+
+    getConfig() {
+        const stored = localStorage.getItem('ward22a_cloud_config');
+        if (!stored) {
+            throw new Error('Cloud backup not configured');
+        }
+        const config = JSON.parse(stored);
+        if (!config.apiKey || !config.clientId) {
+            throw new Error('Cloud backup API key or client ID missing');
+        }
+        return config;
+    }
+
+    async initializeGoogleDrive() {
+        await this.ensureGapiLoaded();
+        const config = this.getConfig();
+
+        await new Promise((resolve, reject) => {
+            gapi.load('client:auth2', () => {
+                gapi.client.init({
+                    apiKey: config.apiKey,
+                    clientId: config.clientId,
+                    discoveryDocs: [this.discoveryDoc],
+                    scope: this.scopes,
+                    prompt: 'consent'
+                }).then(resolve).catch(reject);
+            });
+        });
+
+        this.authInstance = gapi.auth2.getAuthInstance();
+        this.isSignedIn = this.authInstance.isSignedIn.get();
+        this.authInstance.isSignedIn.listen((signedIn) => {
+            this.isSignedIn = signedIn;
+        });
+    }
+
+    async signIn() {
+        if (!this.authInstance) {
+            await this.initializeGoogleDrive();
+        }
+        await this.authInstance.signIn();
+        this.isSignedIn = true;
+    }
+
+    async signOut() {
+        if (!this.authInstance) {
+            await this.initializeGoogleDrive();
+        }
+        await this.authInstance.signOut();
+        this.isSignedIn = false;
+    }
+
+    async ensureBackupFolder() {
+        const response = await gapi.client.drive.files.list({
+            q: `name='${this.folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+            fields: 'files(id, name)'
+        });
+
+        if (response.result.files && response.result.files.length > 0) {
+            return response.result.files[0].id;
+        }
+
+        const createResponse = await gapi.client.drive.files.create({
+            resource: {
+                name: this.folderName,
+                mimeType: 'application/vnd.google-apps.folder'
             },
-            keyMaterial,
-            { name: this.algorithm, length: this.keyLength },
-            true,
-            ['encrypt', 'decrypt']
-        );
+            fields: 'id'
+        });
+
+        return createResponse.result.id;
     }
 
-    // Encrypt hospital data with AES-256-GCM
-    async encryptData(data, password) {
-        try {
-            const salt = window.crypto.getRandomValues(new Uint8Array(16));
-            const iv = window.crypto.getRandomValues(new Uint8Array(12));
-            const key = await this.generateKey(password, salt);
-            
-            const encoder = new TextEncoder();
-            const encodedData = encoder.encode(JSON.stringify(data));
-            
-            const encryptedData = await window.crypto.subtle.encrypt(
-                { name: this.algorithm, iv: iv },
-                key,
-                encodedData
-            );
+    formatBytes(bytes) {
+        if (!bytes) return '0 Bytes';
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+    }
 
-            // Combine salt + iv + encrypted data
-            const result = new Uint8Array(salt.length + iv.length + encryptedData.byteLength);
-            result.set(salt);
-            result.set(iv, salt.length);
-            result.set(new Uint8Array(encryptedData), salt.length + iv.length);
-            
-            // Return as base64 string
-            return btoa(String.fromCharCode(...result));
-        } catch (error) {
-            throw new Error('Encryption failed: ' + error.message);
+    async uploadBackup(data, encryptionPassword) {
+        if (!this.encryption) {
+            throw new Error('Encryption system not available');
         }
+
+        const folderId = await this.ensureBackupFolder();
+        const payload = {
+            hospitalData: data,
+            metadata: {
+                exportDate: new Date().toISOString(),
+                deviceId: localStorage.getItem('ward22a_device_id') || 'unknown'
+            }
+        };
+
+        const encrypted = await this.encryption.encryptData(payload, encryptionPassword);
+        const filename = this.encryption.generateBackupFilename();
+
+        const response = await gapi.client.drive.files.create({
+            resource: {
+                name: filename,
+                parents: [folderId]
+            },
+            media: {
+                mimeType: 'text/plain',
+                body: encrypted
+            },
+            fields: 'id, name, size'
+        });
+
+        return {
+            success: true,
+            fileId: response.result.id,
+            filename: response.result.name,
+            size: this.formatBytes(parseInt(response.result.size || '0', 10))
+        };
     }
 
-    // Decrypt hospital data
-    async decryptData(encryptedBase64, password) {
-        try {
-            const encryptedArray = new Uint8Array(
-                atob(encryptedBase64).split('').map(char => char.charCodeAt(0))
-            );
-            
-            const salt = encryptedArray.slice(0, 16);
-            const iv = encryptedArray.slice(16, 28);
-            const data = encryptedArray.slice(28);
-            
-            const key = await this.generateKey(password, salt);
-            
-            const decryptedData = await window.crypto.subtle.decrypt(
-                { name: this.algorithm, iv: iv },
-                key,
-                data
-            );
-            
-            const decoder = new TextDecoder();
-            return JSON.parse(decoder.decode(decryptedData));
-        } catch (error) {
-            throw new Error('Decryption failed: Wrong password or corrupted data');
+    async listBackups() {
+        const folderId = await this.ensureBackupFolder();
+        const response = await gapi.client.drive.files.list({
+            q: `'${folderId}' in parents and trashed=false`,
+            fields: 'files(id, name, createdTime, modifiedTime, size, description)',
+            orderBy: 'modifiedTime desc'
+        });
+
+        const backups = (response.result.files || []).map((file) => ({
+            id: file.id,
+            name: file.name,
+            created: file.modifiedTime || file.createdTime,
+            size: this.formatBytes(parseInt(file.size || '0', 10)),
+            description: file.description || 'Encrypted backup'
+        }));
+
+        return {
+            success: true,
+            backups
+        };
+    }
+
+    async downloadBackup(fileId, encryptionPassword) {
+        if (!this.encryption) {
+            throw new Error('Encryption system not available');
         }
+
+        const response = await gapi.client.drive.files.get({
+            fileId,
+            alt: 'media'
+        });
+
+        const decrypted = await this.encryption.decryptData(response.body, encryptionPassword);
+        return {
+            success: true,
+            data: decrypted
+        };
     }
 
-    // Generate secure backup filename
-    generateBackupFilename() {
-        const date = new Date().toISOString().split('T')[0];
-        const time = new Date().toISOString().split('T')[1].split('.')[0].replace(/:/g, '-');
-        const random = Math.random().toString(36).substr(2, 5);
-        return `Ward22A_Backup_${date}_${time}_${random}.hms`;
+    async deleteBackup(fileId) {
+        await gapi.client.drive.files.delete({ fileId });
+        return { success: true };
     }
 
-    // Test encryption/decryption
-    async testEncryption() {
-        const testData = { test: "Hospital Management System", date: new Date().toISOString() };
-        const password = "test_password_123";
-        
-        try {
-            const encrypted = await this.encryptData(testData, password);
-            const decrypted = await this.decryptData(encrypted, password);
-            
-            return JSON.stringify(testData) === JSON.stringify(decrypted);
-        } catch (error) {
-            console.error('Encryption test failed:', error);
-            return false;
-        }
+    setupAutoBackup(hours = 24) {
+        const intervalMs = hours * 60 * 60 * 1000;
+        setInterval(() => {
+            if (!this.isSignedIn) return;
+            const config = JSON.parse(localStorage.getItem('ward22a_cloud_config') || '{}');
+            const password = config.encryptionPassword;
+            if (!password || !window.hms) return;
+            this.uploadBackup(window.hms.hospitalData, password).catch((error) => {
+                console.error('Auto backup failed:', error);
+            });
+        }, intervalMs);
     }
 }
 
-// Export for global use
-window.DataEncryption = DataEncryption;
+window.CloudBackup = CloudBackup;
